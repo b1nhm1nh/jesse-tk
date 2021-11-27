@@ -803,7 +803,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
     backtest mode. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
     validate_cwd()
-    
+
     config['app']['trading_mode'] = 'backtest'
     # register_custom_exception_handler()
     # debug flag
@@ -826,11 +826,11 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
         except:
             print(dna)
             exit()
-            
+
         for _route in router.routes:
             _route.dna = dna_encoded
             # print('New DNA:', _route.dna)
-    
+
     # Inject payload HP to route
     for r in router.routes:
         # print(r)
@@ -838,25 +838,19 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
         r.strategy = StrategyClass()
         if hp != 'None':
             print('Payload: ', hp, 'type:', type(hp))
-            
+
             hp_dict = json_lib.loads(hp.replace("'", '"'))
-            
+
             # print('Old hp:', r.strategy.hyperparameters())
-            
-            hp_new = {}
-            
-            for p in r.strategy.hyperparameters():
-                # r.strategy.hyperparameters()[p] = hp[p]
-                # hp_new[p['name']] = hp[p]
-                # print(p['name'], p['default'])
-                hp_new[p['name']] = hp_dict[p['name']]
-            
+
+            hp_new = {p['name']: hp_dict[p['name']] for p in r.strategy.hyperparameters()}
+
             # hp_new.update(hp)
             # print('New hp:', hp_new)
             r.strategy.hp =  hp_new
         else:
             hp_new = None
-   
+
     # backtest_mode._initialized_strategies()
     backtest_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
                       json=json, full_reports=full_reports, hyperparameters=hp_new)
