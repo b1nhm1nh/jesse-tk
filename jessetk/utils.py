@@ -2,7 +2,7 @@ import base64
 from multiprocessing import cpu_count
 import os
 from subprocess import PIPE, Popen
-
+import pandas as pd
 import jessetk.Vars
 from jessetk.Vars import random_console_formatter, random_console_header1, random_console_header2
 
@@ -281,3 +281,36 @@ def remove_file(fn):
         except:
             print(f'Failed to remove file {fn}')
             exit()
+
+def read_csv_file(filename):
+    """
+    Read csv with headers using pandas
+    :param filename:
+    """
+    df = pd.read_csv(filename, sep='\t') #, lineterminator='\r')
+    return df
+
+def import_dnas(filename):
+    """
+    Import DNA from file
+    :param
+    """
+    dnas = read_csv_file(filename)
+    #replace header
+    columns = []
+    for str in dnas.columns:
+        str = str.replace('training_log','tn')
+        str = str.replace('testing_log','tt')
+        str = str.replace('parameters','p')
+        columns.append(str)
+    dnas.columns = columns
+    #remove dupicate dnas
+    dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
+    #remove dnas with negative pnl total
+    dnas.drop(dnas[dnas['tn.net_profit'] < 0].index, inplace = True)
+    dnas.drop(dnas[dnas['tt.net_profit'] < 0].index, inplace = True)
+
+    top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
+    # print(top_ss2[header].head(20))
+
+    return top_ss2.head(100)

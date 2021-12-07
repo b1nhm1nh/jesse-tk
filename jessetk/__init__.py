@@ -10,7 +10,7 @@ import click
 import jesse.helpers as jh
 from jesse.config import config
 from jesse.helpers import get_config
-from jesse.modes import backtest_mode
+from jesse.modes import backtest2r_mode
 from jesse.routes import router
 from jesse.services import db
 from jesse.services.selectors import get_exchange
@@ -21,7 +21,7 @@ from jessetk.Vars import (initial_test_message, random_console_formatter,
 from jessetk.utils import clear_console
 
 # Python version validation.
-if jh.python_version() < 3.7:
+if jh.python_version() < (3,7):
     print(
         jh.color(
             f'Jesse requires Python version above 3.7. Yours is {jh.python_version()}',
@@ -125,6 +125,45 @@ def pick(dna_log_file, sort_criteria, len1, len2) -> None:
 
 
 @cli.command()
+@click.argument('dna_log_file', required=True, type=str)
+@click.argument('sort_criteria', required=False, type=str)
+@click.argument('len1', required=False, type=int)
+@click.argument('len2', required=False, type=int)
+def pick_csv(dna_log_file, sort_criteria, len1, len2) -> None:
+    """
+    Picks dnas from Jesse optimization csv log file
+    """
+
+    if not dna_log_file:
+        print('dna_log_file is required!')
+        exit()
+
+    sort_criteria = 'pnl1' if not sort_criteria else sort_criteria
+    len1 = 30 if not len1 or len1 < 0 or len1 > 10_000 else len1
+    len2 = 150 if not len2 or len2 < 0 or len2 > 10_000 else len2
+
+    os.chdir(os.getcwd())
+    validate_cwd()
+
+    import jesse.helpers as jh
+    from jesse.routes import router
+
+    makedirs()
+    r = router.routes[0]  # Read first route from routes.py
+    strategy = r.strategy_name
+    StrategyClass = jh.get_strategy_class(r.strategy_name)
+    print('Strategy name:', strategy, 'Strategy Class:', StrategyClass)
+
+    from jessetk.picker_csv import picker
+
+    dna_picker = picker(dna_log_file, strategy,
+                        StrategyClass, len1, len2, sort_criteria)
+
+    dna_picker.sortdnas()
+    # dna_picker.create_output_file()
+    # dna_picker.validate_output_file()
+
+@cli.command()
 @click.argument('dna_file', required=True, type=str)
 @click.argument('start_date', required=True, type=str)
 @click.argument('finish_date', required=True, type=str)
@@ -155,6 +194,40 @@ def refine(dna_file, start_date: str, finish_date: str, eliminate: bool, cpu: in
     print('CPU:', max_cpu)
 
     from jessetk.RefineTh import Refine
+    r = Refine(dna_file, start_date, finish_date, eliminate, max_cpu)
+    r.run()
+
+@cli.command()
+@click.argument('dna_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing dnas at every iteration.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refine2(dna_file, start_date: str, finish_date: str, eliminate: bool, cpu: int) -> None:
+    """
+    backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.RefineTh2 import Refine
     r = Refine(dna_file, start_date, finish_date, eliminate, max_cpu)
     r.run()
 
@@ -785,7 +858,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
     # print(router.routes[0].__dict__)
 
     # backtest_mode._initialized_strategies()
-    backtest_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
+    backtest2r_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
                       json=json, full_reports=full_reports)
 
     # try:    # Catch error when there's no trades.
