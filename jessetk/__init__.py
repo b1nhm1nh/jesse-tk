@@ -231,6 +231,39 @@ def refine2(dna_file, start_date: str, finish_date: str, eliminate: bool, cpu: i
     r = Refine(dna_file, start_date, finish_date, eliminate, max_cpu)
     r.run()
 
+@cli.command()
+@click.argument('dna_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing dnas at every iteration.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refine3(dna_file, start_date: str, finish_date: str, eliminate: bool, cpu: int) -> None:
+    """
+    backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.RefineTh3 import Refine
+    r = Refine(dna_file, start_date, finish_date, eliminate, max_cpu)
+    r.run()
 
 @cli.command()
 @click.argument('start_date', required=True, type=str)

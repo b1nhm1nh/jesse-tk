@@ -310,7 +310,40 @@ def import_dnas(filename):
     dnas.drop(dnas[dnas['tn.net_profit'] < 0].index, inplace = True)
     dnas.drop(dnas[dnas['tt.net_profit'] < 0].index, inplace = True)
 
-    top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
+    # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
     # print(top_ss2[header].head(20))
+    top_sr = dnas.sort_values(by=['tn.sharpe_ratio','tt.sharpe_ratio'], ascending=False)
+    # print(top_sr[header].head(20))
 
-    return top_ss2.head(100)
+    return top_sr.head(160)
+
+def import_dnas3(filename):
+    """
+    Import DNA from file
+    :param
+    """
+    dnas = read_csv_file(filename)
+    #replace header
+    columns = []
+    for str in dnas.columns:
+        str = str.replace(' Dna','dna')
+        str = str.replace(' Sharpe','Sharpe')
+        str = str.replace(' Total Net Profit','Total Net Profit')
+    #     str = str.replace('parameters','p')
+        columns.append(str)
+    dnas.columns = columns
+    #remove dupicate dnas
+    print(dnas.columns)
+    print(dnas.head(10))
+
+    dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
+    #remove dnas with negative pnl total
+    dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
+
+    # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
+    # print(top_ss2[header].head(20))
+    top_sr = dnas.sort_values(by=['Sharpe'], ascending=False)
+    # print(top_sr[header].head(20))
+
+    return top_sr.head(160)
+
