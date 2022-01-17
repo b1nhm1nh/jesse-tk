@@ -152,9 +152,9 @@ def create_csv_report(sorted_results, filename, header):
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(str(header).replace('[', '').replace(']', '').replace("'", "").replace(',',
                                                                                        csvd) + '\n')
-
+        #repr
         for srl in sorted_results:
-            f.write(f"{srl['symbol']}{csvd}{srl['tf']}{csvd}" + repr(srl['dna']) +
+            f.write(f"{srl['symbol']}{csvd}{srl['tf']}{csvd}" + (srl['dna']) +
                     f"{csvd}{srl['start_date']}{csvd}"
                     f"{srl['finish_date']}{csvd}"
                     f"{srl['total_trades']}{csvd}"
@@ -290,7 +290,7 @@ def read_csv_file(filename):
     df = pd.read_csv(filename, sep='\t') #, lineterminator='\r')
     return df
 
-def import_dnas(filename):
+def import_dnas(filename, max_dnas = 1000):
     """
     Import DNA from file
     :param
@@ -315,9 +315,9 @@ def import_dnas(filename):
     top_sr = dnas.sort_values(by=['tn.sharpe_ratio','tt.sharpe_ratio'], ascending=False)
     # print(top_sr[header].head(20))
 
-    return top_sr.head(160)
+    return top_sr.head(max_dnas)
 
-def import_dnas3(filename):
+def import_dnas3(filename, max_dnas = 1000):
     """
     Import DNA from file
     :param
@@ -345,5 +345,5 @@ def import_dnas3(filename):
     top_sr = dnas.sort_values(by=['Sharpe'], ascending=False)
     # print(top_sr[header].head(20))
 
-    return top_sr.head(160)
+    return top_sr.head(max_dnas)
 

@@ -20,12 +20,13 @@ from jessetk.Vars import refine_file_header
 
 
 class Refine:
-    def __init__(self, dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
+    def __init__(self, long_dna_py_file, short_dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
 
-        self.dna_py_file = dna_py_file
+        self.long_dna_py_file = long_dna_py_file
+        self.short_dna_py_file = short_dna_py_file
         self.start_date = start_date
         self.finish_date = finish_date
         self.cpu = cpu
@@ -45,8 +46,8 @@ class Refine:
         self.dnas_module = None
         self.routes_template = None
         self.dnas = None
-        self.n_of_dnas = None
         self.max_dnas = dnas
+        self.n_of_dnas = None
 
         r = router.routes[0]  # Read first route from routes.py
         self.exchange = r.exchange
@@ -69,64 +70,71 @@ class Refine:
         results = []
         sorted_results = []
         iters_completed = 0
-        self.dnas = utils.import_dnas(self.dna_py_file, self.max_dnas)
-        self.n_of_dnas = len(self.dnas)
-        iters = self.n_of_dnas
-        self.n_of_iters = self.n_of_dnas
+        self.l_dnas = utils.import_dnas3(self.long_dna_py_file, self.max_dnas)
+        self.s_dnas = utils.import_dnas3(self.short_dna_py_file, self.max_dnas)
+        self.ln_of_dnas = len(self.l_dnas)
+        self.sn_of_dnas = len(self.s_dnas)
+        l_iters = self.ln_of_dnas
+        # self.n_of_iters = self.n_of_dnas
         index = 0  # TODO Reduce number of vars ...
         start = timer()
-        print(f"Size of dna {len(self.dnas)}")
-        while iters > 0:
-            commands = []
+        print(f"Size of dna: {len(self.l_dnas)} {len(self.s_dnas)}")
+        while l_iters > 0:
+            s_iters = self.sn_of_dnas
+            while s_iters > 0:
+                commands = []
 
-            for _ in range(max_cpu):
-                if iters > 0:
-                    iters -= 1
-                    dna = self.dnas['dna'].values[iters]
-                    # print(f"Dna {dna}")
+                for _ in range(max_cpu):
+                    if s_iters > 0:
+                        s_iters -= 1
+                        dna = self.dnas['dna'].values[l_iters] + self.dnas['dna'].values[s_iters]
+                        # print(f"Dna {dna}")
 
-                    commands.append(
-                        f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)}")
-                    index += 1
+                        commands.append(
+                            f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)}")
+                        index += 1
 
-            processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
-            # wait for completion
-            for p in processes:
-                p.wait()
+                processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
+                # wait for completion
+                for p in processes:
+                    p.wait()
 
-                # Get thread's console output
-                (output, err) = p.communicate()
-                # debug
-                # print(output.decode('utf-8'))
-                # exit()
-                iters_completed += 1
+                    # Get thread's console output
+                    (output, err) = p.communicate()
+                    # debug
+                    # print(output.decode('utf-8'))
+                    # exit()
+                    iters_completed += 1
 
-                # Map console output to a dict
-                metric = utils.get_metrics3(output.decode('utf-8'))
+                    # Map console output to a dict
+                    metric = utils.get_metrics3(output.decode('utf-8'))
 
-                if metric not in results:
-                    results.append(deepcopy(metric))
+                    if metric not in results:
+                        results.append(deepcopy(metric))
 
-                sorted_results_prelist = sorted(results, key=lambda x: float(x['sharpe']), reverse=True)
+                    sorted_results_prelist = sorted(results, key=lambda x: float(x['sharpe']), reverse=True)
 
-                self.sorted_results = []
+                    self.sorted_results = []
 
-                if self.eliminate:
-                    for r in sorted_results_prelist:
-                        if float(r['sharpe']) > 0:
-                            self.sorted_results.append(r)
-                else:
-                    self.sorted_results = sorted_results_prelist
+                    if self.eliminate:
+                        for r in sorted_results_prelist:
+                            if float(r['sharpe']) > 0:
+                                self.sorted_results.append(r)
+                    else:
+                        self.sorted_results = sorted_results_prelist
 
-                clear_console()
+                    clear_console()
 
-                eta = ((timer() - start) / index) * (self.n_of_dnas - index)
-                eta_formatted = strftime("%H:%M:%S", gmtime(eta))
-                print(
-                    f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
-                    f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
+                    eta = ((timer() - start) / index) * (self.n_of_dnas - index)
+                    eta_formatted = strftime("%H:%M:%S", gmtime(eta))
+                    print(
+                        f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
+                        f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
 
-                self.print_tops_formatted()
+                    self.print_tops_formatted()
+
+                l_iters -= 1
+                
 
         if self.eliminate:
             self.save_dnas(self.sorted_results, self.dna_py_file)
@@ -137,7 +145,7 @@ class Refine:
                                 self.report_file_name, refine_file_header)
 
     def runold(self, dna_file: str, start_date: str, finish_date: str):
-        self.dnas = utils.import_dnas(self.dna_py_file)
+        self.dnas = utils.import_dnas3(self.dna_py_file)
         self.routes_template = utils.read_file('routes.py')
 
         results = []

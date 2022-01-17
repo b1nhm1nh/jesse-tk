@@ -20,7 +20,7 @@ from jessetk.Vars import refine_file_header
 
 
 class Refine:
-    def __init__(self, dna_py_file, start_date, finish_date, eliminate, cpu):
+    def __init__(self, dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -45,6 +45,7 @@ class Refine:
         self.dnas_module = None
         self.routes_template = None
         self.dnas = None
+        self.max_dnas = dnas
         self.n_of_dnas = None
 
         r = router.routes[0]  # Read first route from routes.py
@@ -68,7 +69,7 @@ class Refine:
         results = []
         sorted_results = []
         iters_completed = 0
-        self.dnas = utils.import_dnas3(self.dna_py_file)
+        self.dnas = utils.import_dnas3(self.dna_py_file, self.max_dnas)
         self.n_of_dnas = len(self.dnas)
         iters = self.n_of_dnas
         self.n_of_iters = self.n_of_dnas

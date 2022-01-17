@@ -154,7 +154,7 @@ def getmetrics(_pair, _tf, _dna, metrics, _startdate, _enddate):
 
 
 def runtest(_start_date, _finish_date, _pair, _tf, symbol):
-    process = Popen(['jesse', 'backtest', _start_date, _finish_date], stdout=PIPE)
+    process = Popen(['jesse', 'backtest2', _start_date, _finish_date], stdout=PIPE)
     (output, err) = process.communicate()
     exit_code = process.wait()
     res = output.decode('utf-8', errors='ignore')
