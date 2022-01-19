@@ -326,6 +326,7 @@ def import_dnas3(filename, max_dnas = 1000):
     #replace header
     columns = []
     for str in dnas.columns:
+        str = str.replace(' Max.DD','Max.DD')        
         str = str.replace(' Dna','dna')
         str = str.replace(' Sharpe','Sharpe')
         str = str.replace(' Total Net Profit','Total Net Profit')
@@ -339,6 +340,7 @@ def import_dnas3(filename, max_dnas = 1000):
     dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
     #remove dnas with negative pnl total
     dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
+    dnas.drop(dnas[dnas['Max.DD'] < -25].index, inplace = True)
 
     # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
     # print(top_ss2[header].head(20))
