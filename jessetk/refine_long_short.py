@@ -80,6 +80,7 @@ class Refine:
         index = 0  # TODO Reduce number of vars ...
         start = timer()
         print(f"Size of dna: {len(self.l_dnas)} {len(self.s_dnas)}")
+        self.dnas = []
         while l_iters > 0:
             l_iters -= 1
             s_iters = self.sn_of_dnas
@@ -90,6 +91,7 @@ class Refine:
                     if s_iters > 0:
                         s_iters -= 1
                         dna = self.l_dnas['dna'].values[l_iters] + self.s_dnas['dna'].values[s_iters]
+                        self.dnas.append(dna)
                         # print(f"Dna {dna}")
 
                         commands.append(
