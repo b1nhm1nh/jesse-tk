@@ -214,18 +214,26 @@ class Refine:
     def print_tops_formatted(self):
         print('\033[1m', end='')
         print(
-            Vars.refine_console_formatter.format(*Vars.refine_console_header1))
+            Vars.refine3_console_formatter.format(*Vars.refine3_console_header1))
         print(
-            Vars.refine_console_formatter.format(*Vars.refine_console_header2))
+            Vars.refine3_console_formatter.format(*Vars.refine3_console_header2))
         print('\033[0m', end='')
 
-        for r in self.sorted_results[0:25]:
+        for r in self.sorted_results[0:40]:
+            rdna = self.dnas.loc[self.dnas['dna'] == r['dna']]
+            # print(rdna)
+            r['_max_dd']       = rdna.iloc[0]['Max.DD']
+            r['_total_profit'] = rdna.iloc[0]['Total Net Profit']
+            r['_sharpe']       = rdna.iloc[0]['Sharpe']
             print(
-                Vars.refine_console_formatter.format(
+                Vars.refine3_console_formatter.format(
                     r['dna'],
-                    r['total_trades'],
-                    r['n_of_longs'],
-                    r['n_of_shorts'],
+                    # r['total_trades'],
+                    # r['n_of_longs'],
+                    # r['n_of_shorts'],
+                    r['_total_profit'],
+                    r['_max_dd'],
+                    r['_sharpe'],
                     r['total_profit'],
                     r['max_dd'],
                     r['annual_return'],

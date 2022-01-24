@@ -93,8 +93,47 @@ refine_console_header2 = ['String',
                           'Trades',
                           'Fees',
                           'Change %']
-
+refine3_console_header1 = ['Dna',
+                          '_Total',
+                          'Max.DD',
+                          'Sharpe',
+                          'Total Net',
+                          'Max.',
+                          'Annual',
+                          'Win',
+                          'Serenity',
+                          'Sharpe',
+                          'Calmar',
+                          'Winning',
+                          'Losing',
+                          'Largest',
+                          'Largest',
+                          'Winning',
+                          'Losing',
+                          'Paid',
+                          'Market']
+refine3_console_header2 = ['String',
+                          'Profit%',
+                          '%',
+                          '',
+                          'Profit %',
+                          'DD %',
+                          'Return %',
+                          'Rate %',
+                          'Index',
+                          'Ratio',
+                          'Ratio',
+                          'Streak',
+                          'Streak',
+                          'Win. Trade',
+                          'Los. Trade',
+                          'Trades',
+                          'Trades',
+                          'Fees',
+                          'Change %']
 refine_console_formatter = '{: <12} {: <6} {: <5} {: <7}{: <12} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
+                           '{: <12} {: <12} {: <10} {: <8} {: <8} {: <8}'
+refine3_console_formatter = '{: <13} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
                            '{: <12} {: <12} {: <10} {: <8} {: <8} {: <8}'
 
 random_file_header = ['Pair',  # TODO Pairs for multi routes?
