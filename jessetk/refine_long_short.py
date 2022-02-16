@@ -50,7 +50,7 @@ class Refine:
         self.n_of_dnas = None
 
         r = router.routes[0]  # Read first route from routes.py
-        self.exchange = r.exchange
+        self.exchange = r.exchange.replace(' ', '_')
         self.pair = r.symbol
         self.timeframe = r.timeframe
         self.strategy = r.strategy_name
@@ -58,7 +58,7 @@ class Refine:
         self.removesimilardnas = False
 
         self.ts = datetime.now().strftime("%Y%m%d %H%M%S")
-        self.filename = f'Refine-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
+        self.filename = f'Refine-ls-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
 
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
