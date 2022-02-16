@@ -56,8 +56,8 @@ class Refine:
 
         self.removesimilardnas = False
 
-        self.ts = datetime.now().strftime("%Y%m%d %H%M%S")
-        self.filename = f'Refine_top_-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
+        self.ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.filename = f'Refine_top-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
 
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
