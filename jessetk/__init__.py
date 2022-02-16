@@ -246,7 +246,7 @@ def refine2(dna_file, start_date: str, finish_date: str, dnas:int, eliminate: bo
 @click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-def refine3(dna_file, start_date: str, finish_date: str, dnas: int, eliminate: bool, cpu: int) -> None:
+def refine_top(dna_file, start_date: str, finish_date: str, dnas: int, eliminate: bool, cpu: int) -> None:
     """
     backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
@@ -267,7 +267,7 @@ def refine3(dna_file, start_date: str, finish_date: str, dnas: int, eliminate: b
         max_cpu = cpu
     print('CPU:', max_cpu)
 
-    from jessetk.RefineTh3 import Refine
+    from jessetk.refine_top import Refine
     r = Refine(dna_file, start_date, finish_date, dnas, eliminate, max_cpu)
     r.run()
 
