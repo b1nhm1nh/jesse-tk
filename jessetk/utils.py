@@ -3,8 +3,146 @@ from multiprocessing import cpu_count
 import os
 from subprocess import PIPE, Popen
 import pandas as pd
+from jesse.helpers import convert_number
 import jessetk.Vars
 from jessetk.Vars import random_console_formatter, random_console_header1, random_console_header2
+from dateutil.parser import isoparse
+import psycopg2
+import urllib
+import json
+from datetime import datetime, timedelta
+from dateutil.tz import UTC
+
+def add_days(date: str, days: int):
+    """Add days to a ISO formatted date string"""
+    return (datetime.strptime(date, '%Y-%m-%d') + timedelta(days=days)).strftime('%Y-%m-%d')
+
+def sub_days(date: str, days: int):
+    """Subtract days from a ISO formatted date string"""
+    return (datetime.strptime(date, '%Y-%m-%d') - timedelta(days=days)).strftime('%Y-%m-%d')
+
+def get_symbols_list(exchange: str = 'Binance Futures', quote_asset: str = 'USDT') -> list:
+    local_fn = f"{exchange.replace(' ', '')}ExchangeInfo.json"
+    urls = {'Binance': 'https://api.binance.com/api/v1/exchangeInfo', 'Binance Futures': 'https://fapi.binance.com/fapi/v1/exchangeInfo'}
+    symbols_list = []
+
+    try:
+        with urllib.request.urlopen(urls[exchange]) as url:
+            data = json.loads(url.read().decode())
+
+        # save url to file
+        if int(data['serverTime']):
+            try:
+                with open(local_fn, 'w') as f:
+                    json.dump(data, f)
+            except:
+                print(f"Failed to save {local_fn}")
+
+    except Exception as e:
+        print(f"Error while fetching data from {exchange}. {e}")
+
+        try:
+            with open(local_fn) as f:
+                data = json.load(f)
+
+            print(f"Using cached local data from {datetime.utcfromtimestamp(data['serverTime'] / 1000).strftime('%Y-%m-%d %H:%M')}")
+        except Exception as e:
+            print(f"Error while loading local api data for {exchange}. {e}")
+            return None
+
+    symbols = []
+
+    for sym in data['symbols']:
+        blvt = False
+
+        # Check if symbol is a leveraged token (UP/DOWN)
+
+        try:
+            blvt  = 'LEVERAGED' in sym['permissions']
+        except:
+            pass        
+
+        if sym['quoteAsset'] == quote_asset and not blvt and sym['status'] != 'BREAK':
+            # print(f"{sym['baseAsset']}-{quote_asset}")
+            symbols.append(f"{sym['baseAsset']}-{quote_asset}")
+
+    return symbols or None
+
+def avail_pairs(start_date: str = '2021-08-01', exchange: str = 'Binance Futures') -> list:
+    from jesse.config import config
+    symbols_list = None
+    date = isoparse(f'{start_date}T00:00:00+00:00').astimezone(UTC)
+    epoch = int(date.timestamp() * 1000)
+
+    db_name = config['env']['databases']['postgres_name']
+    db_user = config['env']['databases']['postgres_username']
+    db_pass = config['env']['databases']['postgres_password']
+    db_host = config['env']['databases']['postgres_host']
+    db_port = config['env']['databases']['postgres_port']
+
+    try:
+        conn = psycopg2.connect(database=db_name, user=db_user, password=db_pass, host=db_host, port=db_port)
+
+        cursor = conn.cursor()
+        query = f"select symbol from public.candle where exchange = '{exchange}' and timestamp = {epoch} group by symbol;"
+        cursor.execute(query)
+        symbols = cursor.fetchall()
+        symbols_list = [x[0] for x in symbols]
+
+    except (Exception, psycopg2.Error) as error:
+        print("Error while fetching data from PostgreSQL", error)
+        return []
+
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+        return symbols_list or []
+
+def hp_to_seq(hp):
+    longest_param = 0
+
+    for v in hp.values():
+        if len(str(v)) > longest_param:
+            longest_param = len(str(v))
+            
+    hash = ''.join([f'{value:0>{longest_param}}' for key, value in hp.items()])
+    return f"{hash}{longest_param}"
+
+
+def decode_seq(seq):
+    # Get the sequence width from the last char
+    width = int(seq[-1])
+    # Remove the width from the sequence
+    seq = seq[:-1]
+    return [seq[i:i+width] for i in range(0, len(seq), width)]
+
+
+def hp_to_dna(strategy_hp, hps):    # TODO - make it work with floats too
+    """Returns DNA code from HP parameters
+    example input: {'ott_len': 3, 'ott_percent': 420, 'stop_loss': 329, 'risk_reward': 19, 'chop_rsi_len': 27, 'chop_bandwidth': 21}
+    example output: *Og2O+
+
+    Args:
+        strategy_hp (StrategyClass.hyperparameters(None): Hyperparameters defined in StrategyClass
+        hps (Dict): Values to be converted to DNA
+
+    Returns:
+        str: encoded DNA string
+    """
+    return ''.join(
+        chr(
+            int(
+                round(
+                    convert_number(
+                        param['max'], param['min'], 119, 40, hps[dec]
+                    )
+                )
+            )
+        )
+        for dec, param in zip(hps, strategy_hp)
+    )
+
 
 def cpu_info(cpu):
     if cpu > cpu_count():
@@ -16,6 +154,7 @@ def cpu_info(cpu):
         max_cpu = cpu
     print('Cpu count:', cpu_count(), 'In use:', max_cpu)
     return max_cpu
+
 
 def encode_base32(s):
     s_bytes = s.encode('ascii')
@@ -63,6 +202,11 @@ def split(line):
     r = r.replace(')', '')
     r = r.replace('(', '')
     return r.replace(',', '')
+
+def split_dna_string(line):
+    ll = line.split(' ')
+    return ll[len(ll) - 1]
+    
 
 
 def split_n_of_longs_shorts(line):
@@ -112,7 +256,7 @@ def print_random_header():
 
 
 def print_random_tops(sr, top_n):
-    for r in sr[0:top_n]:
+    for r in sr[:top_n]:
         print(
             random_console_formatter.format(
                 r['start_date'],
@@ -200,6 +344,10 @@ def get_metrics3(console_output) -> dict:
 
         if 'No trades were made' in line:
             return metrics
+        
+        if 'InsufficientMargin' in line:
+            print(console_output)
+            return metrics
 
         if 'starting-ending date' in line:
             metrics['start_date'], metrics['finish_date'] = split_dates(line)
@@ -235,6 +383,15 @@ def get_metrics3(console_output) -> dict:
         if 'Calmar Ratio' in line:
             metrics['calmar'] = round(float(split(line)), 2)
 
+        if 'Sortino Ratio' in line:
+            metrics['sortino'] = round(float(split(line)), 2)
+
+        if 'Smart Sharpe' in line:
+            metrics['smart_sharpe'] = round(float(split(line)), 2)
+
+        if 'Smart Sortino' in line:
+            metrics['smart_sortino'] = round(float(split(line)), 2)
+
         if 'Winning Streak' in line:
             metrics['win_strk'] = int(split(line))
 
@@ -242,7 +399,8 @@ def get_metrics3(console_output) -> dict:
             metrics['lose_strk'] = int(split(line))
 
         if 'Longs | Shorts' in line:
-            metrics['n_of_longs'], metrics['n_of_shorts'] = split_n_of_longs_shorts(line)
+            metrics['n_of_longs'], metrics['n_of_shorts'] = split_n_of_longs_shorts(
+                line)
 
         if 'Largest Winning Trade' in line:
             metrics['largest_win'] = round(float(split(line)), 2)
@@ -258,6 +416,13 @@ def get_metrics3(console_output) -> dict:
 
         if 'Market Change' in line:
             metrics['market_change'] = round(float(split(line)), 2)
+            
+        if 'Dna String:' in line:
+            metrics['dna'] = split_dna_string(line)
+        
+        if 'Sequential Hps' in line:
+            metrics['seq_hps'] = split(line)
+            
     return metrics
 
 
@@ -340,7 +505,7 @@ def import_dnas3(filename, max_dnas = 1000):
     dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
     #remove dnas with negative pnl total
     dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
-    dnas.drop(dnas[dnas['Max.DD'] < -25].index, inplace = True)
+    # dnas.drop(dnas[dnas['Max.DD'] < -25].index, inplace = True)
 
     # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
     # print(top_ss2[header].head(20))

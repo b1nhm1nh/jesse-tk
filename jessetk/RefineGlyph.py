@@ -20,7 +20,7 @@ from jessetk.Vars import refine_file_header
 
 
 class Refine:
-    def __init__(self, dna_py_file, start_date, finish_date, eliminate, cpu, full_reports):
+    def __init__(self, dna_py_file, start_date, finish_date, eliminate, cpu):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -30,8 +30,7 @@ class Refine:
         self.finish_date = finish_date
         self.cpu = cpu
         self.eliminate = eliminate
-        self.fr = '--full-reports' if full_reports else ''
-        
+
         self.jessetkdir = datadir
         self.anchor = 'DNA!'
         self.sort_by = {'serenity': 12, 'sharpe': 13, 'calmar': 14}
@@ -83,12 +82,12 @@ class Refine:
                     dna = self.dnas[index][0]
 
                     commands.append(
-                        f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)} {self.fr}")
+                        f"jesse-tk backtest {self.start_date} {self.finish_date} --gly {dna}")
                     index += 1
                     iters -= 1
-                    
-            # print(commands)
-            
+
+            print(commands)
+
             processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
             # wait for completion
             for p in processes:
@@ -104,9 +103,6 @@ class Refine:
 
                 # Map console output to a dict
                 metric = utils.get_metrics3(output.decode('utf-8'))
-                
-                # metric['dna'] = dna
-                
                 print('Metrics decoded', len(metric))
 
                 if metric not in results:
@@ -114,13 +110,14 @@ class Refine:
 
                 sorted_results_prelist = sorted(results, key=lambda x: float(x['sharpe']), reverse=True)
                 print('Sorted results', len(sorted_results_prelist))
-                
+
                 self.sorted_results = []
 
                 if self.eliminate:
-                    for r in sorted_results_prelist:
-                        if float(r['sharpe']) > 0:
-                            self.sorted_results.append(r)
+                    self.sorted_results.extend(
+                        r for r in sorted_results_prelist if float(r['sharpe']) > 0
+                    )
+
                 else:
                     self.sorted_results = sorted_results_prelist
 
@@ -218,14 +215,10 @@ class Refine:
 
     # v TODO Move to utils
     def print_tops_formatted(self):
-
-        print('\033[1m', end='')
         print(
             Vars.refine_console_formatter.format(*Vars.refine_console_header1))
         print(
             Vars.refine_console_formatter.format(*Vars.refine_console_header2))
-
-        print('\033[0m', end='')
 
         for r in self.sorted_results[:25]:
             print(

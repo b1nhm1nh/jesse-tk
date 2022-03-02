@@ -10,7 +10,7 @@ Metrics = {
     'tf': None,  # timeframe
     'strategy': None,
     'dna': 'None',
-    'total_trades': 0,
+    'total_trades': None,
     'total_profit': 0.0,
     'max_dd': 0.0,
     'annual_return': 0.0,
@@ -19,9 +19,11 @@ Metrics = {
     'n_of_longs': 0,
     'n_of_shorts': 0,
     'serenity': 0.0,
-    'sharpe': 0.0,
-    'calmar': 0.0,
-    'sortino': 0.0,
+    'sharpe': None,
+    'calmar': None,
+    'sortino': None,
+    'smart_sharpe': None,
+    'smart_sortino': None,
     'win_strk': 0.0,
     'lose_strk': 0.0,
     'largest_win': 0.0,
@@ -29,6 +31,8 @@ Metrics = {
     'n_of_wins': 0,
     'n_of_loses': 0,
     'market_change': 0.0,
+    'seq_hps': 'None',
+    'parameters': 'None',
 }
 
 refine_file_header = ['Pair',
