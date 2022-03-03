@@ -214,9 +214,9 @@ class Refine:
                     r['sharpe'],
                     r['calmar'],
                     str(r['win_strk']) + ' / ' + str(r['lose_strk']),
+                    str(r['n_of_wins']) + ' / ' + str(r['n_of_loses']),
                     r['largest_win'],
                     r['largest_lose'],
-                    str(r['n_of_wins']) + ' / ' + str(r['n_of_loses']),
                     r['paid_fees']))
 
     def save_dnas(self, sorted_results, dna_fn=None):

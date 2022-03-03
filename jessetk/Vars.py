@@ -153,9 +153,9 @@ refinewf_console_header1 = ['Dna',
                           'Sharpe',
                           'Calmar',
                           'Win/Lose',
-                          'Max',
-                          'Max',
                           'Win/Lose',
+                          'Max',
+                          'Max',
                           'Paid']
 refinewf_console_header2 = ['String',
                           'Last',
@@ -169,9 +169,9 @@ refinewf_console_header2 = ['String',
                           'Ratio',
                           'Ratio',
                           'Streak',
+                          'Trades',
                           'Win',
                           'Loss',
-                          'Trades',
                           'Fees']
 
 refinewf_console_formatter = '{: <26} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
