@@ -62,6 +62,7 @@ class Refine:
 
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
+        self.market_changed = None
 
     def run(self):
         max_cpu = self.cpu
@@ -125,7 +126,9 @@ class Refine:
                 eta_formatted = strftime("%H:%M:%S", gmtime(eta))
                 print(
                     f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
-                    f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
+                    f'| {self.timeframe} | {self.start_date} -> {self.finish_date} ' 
+                    f'| Market change {self.market_changed}'
+                    )
 
                 self.print_tops_formatted()
 
@@ -187,6 +190,8 @@ class Refine:
         print('\033[0m', end='')
 
         for r in self.sorted_results[0:40]:
+            if self.market_changed is None:
+                self.market_changed = r['market_change']
             rdna = self.dnas.loc[self.dnas['dna'] == r['dna']]
             # print(rdna)
             r['_max_dd']       = rdna.iloc[0]['Max.DD']
@@ -208,14 +213,11 @@ class Refine:
                     r['serenity'],
                     r['sharpe'],
                     r['calmar'],
-                    r['win_strk'],
-                    r['lose_strk'],
+                    str(r['win_strk']) + ' / ' + str(r['lose_strk']),
                     r['largest_win'],
                     r['largest_lose'],
-                    r['n_of_wins'],
-                    r['n_of_loses'],
-                    r['paid_fees'],
-                    r['market_change']))
+                    str(r['n_of_wins']) + ' / ' + str(r['n_of_loses']),
+                    r['paid_fees']))
 
     def save_dnas(self, sorted_results, dna_fn=None):
 

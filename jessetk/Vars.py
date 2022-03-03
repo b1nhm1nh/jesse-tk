@@ -142,44 +142,40 @@ refine3_console_formatter = '{: <13} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} 
 
 
 refinewf_console_header1 = ['Dna',
-                          '_Total',
-                          'Max.DD',
+                          'TNP',
+                          'Max DD',
                           'Sharpe',
-                          'Total Net',
-                          'Max.',
+                          '| TNP ',
+                          'Max DD',
                           'Annual',
                           'Win',
                           'Serenity',
                           'Sharpe',
                           'Calmar',
-                          'Winning',
-                          'Losing',
+                          'Win/Lose',
                           'Max',
                           'Max',
                           'Win/Lose',
-                          'Paid',
-                          'Market']
+                          'Paid']
 refinewf_console_header2 = ['String',
-                          'Profit%',
-                          '%',
-                          '',
-                          'Profit %',
-                          'DD %',
-                          'Return %',
+                          'Last',
+                          'Last',
+                          'Last',
+                          '|  % ',
+                          '  %',
+                          'Ret %',
                           'Rate %',
                           'Index',
                           'Ratio',
                           'Ratio',
                           'Streak',
-                          'Streak',
                           'Win',
                           'Loss',
                           'Trades',
-                          'Fees',
-                          'Change %']
+                          'Fees']
 
-refinewf_console_formatter = '{: <13} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
-                           '{: <12} {: <12} {: <10} {: <8} {: <8}'
+refinewf_console_formatter = '{: <26} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
+                           '{: <12} {: <12} {: <10} {: <8}'
 random_file_header = ['Pair',  # TODO Pairs for multi routes?
                       'TF',
                       'Dna',
