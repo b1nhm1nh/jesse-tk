@@ -1279,7 +1279,7 @@ def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : in
         if i_finish_date > a_finish_date:
             i_finish_date = a_finish_date
         print (f"Walk {i_start_date.format('YYYY-MM-DD')} - {i_finish_date.format('YYYY-MM-DD')} ")
-        r = Refine(dna_file, start_date, finish_date, dnas, eliminate, max_cpu, passno)
+        r = Refine(dna_file, i_start_date.format('YYYY-MM-DD'), i_finish_date.format('YYYY-MM-DD'), dnas, eliminate, max_cpu, passno)
         dna_file = r.run()
 
         # calculate next period

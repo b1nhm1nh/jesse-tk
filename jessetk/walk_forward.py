@@ -154,6 +154,7 @@ class Refine:
             str = str.replace(' Max.DD','Max.DD')        
             str = str.replace(' Dna','dna')
             str = str.replace(' Sharpe','Sharpe')
+            str = str.replace(' Calmar','Calmar')
             str = str.replace(' Total Net Profit','Total Net Profit')
         #     str = str.replace('parameters','p')
             columns.append(str)
@@ -165,7 +166,8 @@ class Refine:
         dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
         #remove dnas with negative pnl total
         dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
-        dnas.drop(dnas[dnas['Sharpe'] < 1].index, inplace = True)
+        dnas.drop(dnas[dnas['Sharpe'] < 2].index, inplace = True)
+        # dnas.drop(dnas[dnas['Calmar'] < 2].index, inplace = True)
 
         # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
         # print(top_ss2[header].head(20))
