@@ -1234,6 +1234,9 @@ def validateconfig():
     '--dnas', default=160, show_default=True,
     help='Number of max dnas to test.')
 @click.option(
+    '--passno', default=1, show_default=True,
+    help='Start-up pass number.')
+@click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
 @click.option(
@@ -1242,7 +1245,7 @@ def validateconfig():
 )
 @click.option('--csv/--no-csv', default=False, help='Outputs a CSV file of all DNAs on completion.')
 @click.option('--json/--no-json', default=False, help='Outputs a JSON file of all DNAs on completion.')
-def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : int, test_month: int, cpu: int, dnas: int, eliminate:bool, debug: bool, csv: bool,
+def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : int, test_month: int, cpu: int, dnas: int, passno: int, eliminate:bool, debug: bool, csv: bool,
              json: bool) -> None:
     """
     Walkforward in period. Enter in "dna_file" "YYYY-MM-DD" "YYYY-MM-DD" "3" "6"
@@ -1274,7 +1277,7 @@ def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : in
     a_finish_date = arrow.get(finish_date, 'YYYY-MM-DD')
     i_start_date = a_start_date
     i_finish_date = i_start_date.shift(months = test_month)
-    passno = 1
+    # passno = 1
     while  i_start_date <= a_finish_date:
         if i_finish_date > a_finish_date:
             i_finish_date = a_finish_date
