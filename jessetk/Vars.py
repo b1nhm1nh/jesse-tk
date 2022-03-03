@@ -148,7 +148,7 @@ refinewf_console_header1 = ['Dna',
                           '| TNP ',
                           'Max DD',
                           'Annual',
-                          'Win',
+                          'WR',
                           'Serenity',
                           'Sharpe',
                           'Calmar',
@@ -164,7 +164,7 @@ refinewf_console_header2 = ['String',
                           '|  % ',
                           '  %',
                           'Ret %',
-                          'Rate %',
+                          '  %',
                           'Index',
                           'Ratio',
                           'Ratio',
@@ -174,7 +174,7 @@ refinewf_console_header2 = ['String',
                           'Loss',
                           'Fees']
 
-refinewf_console_formatter = '{: <26} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
+refinewf_console_formatter = '{: <26} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <6} {: <8} {: <8} {: <8} {: <8} ' \
                            '{: <12} {: <12} {: <10} {: <8}'
 random_file_header = ['Pair',  # TODO Pairs for multi routes?
                       'TF',
