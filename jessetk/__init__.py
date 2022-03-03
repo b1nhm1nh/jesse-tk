@@ -1097,7 +1097,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
 
     # <-------------------------------
 
-        router.routes[0].dna = dna_encoded
+        router.routes[0].dna = decoded_base32_dna
         print('Router:', router.routes[0])
     # Inject Seq payload to route ->
     # if seq != 'None':
