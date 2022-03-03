@@ -16,7 +16,7 @@ from jesse.routes import router
 from jesse.services import db
 from jesse.services.selectors import get_exchange
 import json as json_lib
-from jessetk import Vars, randomwalk, utils
+from jessetk import Vars,  utils
 from jessetk.Vars import (Metrics, initial_test_message, random_console_formatter,
                           random_file_header, refine_file_header)
 from jessetk.utils import clear_console
@@ -1145,7 +1145,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
 
     # backtest_mode._initialized_strategies()
     backtest2r_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
-                      json=json, full_reports=full_reports, hyperparameters=hp_new)
+                      json=json, full_reports=full_reports) #, hyperparameters=hp_new)
 
     # Fix: Print out SeQ to console to help metrics module to grab it
     if seq != 'None':
