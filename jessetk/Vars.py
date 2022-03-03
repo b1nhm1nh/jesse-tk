@@ -140,6 +140,46 @@ refine_console_formatter = '{: <12} {: <6} {: <5} {: <7}{: <12} {: <8} {: <10} {
 refine3_console_formatter = '{: <13} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
                            '{: <12} {: <12} {: <10} {: <8} {: <8} {: <8}'
 
+
+refinewf_console_header1 = ['Dna',
+                          '_Total',
+                          'Max.DD',
+                          'Sharpe',
+                          'Total Net',
+                          'Max.',
+                          'Annual',
+                          'Win',
+                          'Serenity',
+                          'Sharpe',
+                          'Calmar',
+                          'Winning',
+                          'Losing',
+                          'Max',
+                          'Max',
+                          'Win/Lose',
+                          'Paid',
+                          'Market']
+refinewf_console_header2 = ['String',
+                          'Profit%',
+                          '%',
+                          '',
+                          'Profit %',
+                          'DD %',
+                          'Return %',
+                          'Rate %',
+                          'Index',
+                          'Ratio',
+                          'Ratio',
+                          'Streak',
+                          'Streak',
+                          'Win',
+                          'Loss',
+                          'Trades',
+                          'Fees',
+                          'Change %']
+
+refinewf_console_formatter = '{: <13} {: <8} {: <6} {: <6} {: <8} {: <8} {: <10} {: <8} {: <8} {: <8} {: <8} {: <8} {: <8} ' \
+                           '{: <12} {: <12} {: <10} {: <8} {: <8}'
 random_file_header = ['Pair',  # TODO Pairs for multi routes?
                       'TF',
                       'Dna',
