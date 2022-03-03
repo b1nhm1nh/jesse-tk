@@ -85,7 +85,7 @@ class Refine:
                     iters -= 1
                     dna = self.dnas['dna'].values[iters]
                     # print(f"Dna {dna}")
-
+                    # print(f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)}")
                     commands.append(
                         f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)}")
                     index += 1
