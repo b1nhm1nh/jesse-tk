@@ -20,7 +20,7 @@ from jessetk.Vars import refine_file_header
 
 
 class Refine:
-    def __init__(self, dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
+    def __init__(self, dna_py_file, start_date, finish_date, dnas, eliminate, cpu, passno):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -30,6 +30,7 @@ class Refine:
         self.finish_date = finish_date
         self.cpu = cpu
         self.eliminate = eliminate
+        self.passno = passno
 
         self.jessetkdir = datadir
         self.anchor = 'DNA!'
@@ -57,7 +58,7 @@ class Refine:
         self.removesimilardnas = False
 
         self.ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.filename = f'Refine-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
+        self.filename = f'walk_forward-{self.exchange}-{self.pair}-{self.timeframe}-P{self.passno}-{start_date}--{finish_date}'
 
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
@@ -69,7 +70,7 @@ class Refine:
         results = []
         sorted_results = []
         iters_completed = 0
-        self.dnas = utils.import_dnas(self.dna_py_file, self.max_dnas)
+        self.dnas = self.import_dnas(self.dna_py_file, self.max_dnas)
         self.n_of_dnas = len(self.dnas)
         iters = self.n_of_dnas
         self.n_of_iters = self.n_of_dnas
@@ -135,97 +136,68 @@ class Refine:
 
         utils.create_csv_report(self.sorted_results,
                                 self.report_file_name, refine_file_header)
-
-    def runold(self, dna_file: str, start_date: str, finish_date: str):
-        self.dnas = utils.import_dnas(self.dna_py_file)
-        self.routes_template = utils.read_file('routes.py')
-
-        results = []
-        start = timer()
-        print_initial_msg()
-        for index, dnac in enumerate(self.dnas, start=1):
-            # Inject dna to routes.py
-            utils.make_routes(self.routes_template,
-                              self.anchor, dna_code=dnac[0])
-
-            # Run jesse backtest and grab console output
-            console_output = utils.run_test(start_date, finish_date)
-
-            # Scrape console output and return metrics as a dict
-            metric = utils.get_metrics3(console_output)
-
-            # Add test specific static values
-            metric['dna'] = dnac[0]
-            metric['exchange'] = self.exchange
-            metric['symbol'] = self.pair
-            metric['tf'] = self.timeframe
-            metric['start_date'] = self.start_date
-            metric['finish_date'] = self.finish_date
-
-            if metric not in results:
-                results.append(deepcopy(metric))
-            # f.write(str(metric) + '\n')  # Logging disabled
-            # f.flush()
-            sorted_results_prelist = sorted(
-                results, key=lambda x: float(x['sharpe']), reverse=True)
-            self.sorted_results = []
-
-            if self.eliminate:
-                for r in sorted_results_prelist:
-                    if float(r['sharpe']) > 0:
-                        self.sorted_results.append(r)
-            else:
-                self.sorted_results = sorted_results_prelist
-
-            clear_console()
-
-            eta = ((timer() - start) / index) * (self.n_of_dnas - index)
-            eta_formatted = strftime("%H:%M:%S", gmtime(eta))
-            print(
-                f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
-                f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
-
-            self.print_tops_formatted()
-
-        if self.eliminate:
-            self.save_dnas(self.sorted_results, dna_file)
-        else:
-            self.save_dnas(self.sorted_results)
-
-        utils.create_csv_report(self.sorted_results,
-                                self.report_file_name, refine_file_header)
+        return self.report_file_name
 
     def signal_handler(self, sig, frame):
         print('You pressed Ctrl+C!')
         sys.exit(0)
 
-    def import_dnas(self):
-        module_name = self.dna_py_file.replace('\\', '.').replace('.py', '')
-        module_name = module_name.replace('/', '.').replace('.py', '')
-        print(module_name)
+    def import_dnas(self, filename, max_dnas):
+        """
+        Import DNA from file
+        :param
+        """
+        dnas = utils.read_csv_file(filename)
+        #replace header
+        columns = []
+        for str in dnas.columns:
+            str = str.replace(' Max.DD','Max.DD')        
+            str = str.replace(' Dna','dna')
+            str = str.replace(' Sharpe','Sharpe')
+            str = str.replace(' Total Net Profit','Total Net Profit')
+        #     str = str.replace('parameters','p')
+            columns.append(str)
+        dnas.columns = columns
+        #remove dupicate dnas
+        print(dnas.columns)
+        print(dnas.head(10))
 
-        self.dnas_module = importlib.import_module(module_name)
-        importlib.reload(self.dnas_module)
-        self.dnas = self.dnas_module.dnas
-        self.n_of_dnas = len(self.dnas)
-        print(f'Imported {self.n_of_dnas} dnas...')
+        dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
+        #remove dnas with negative pnl total
+        dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
+        # dnas.drop(dnas[dnas['Max.DD'] < -25].index, inplace = True)
+
+        # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
+        # print(top_ss2[header].head(20))
+        top_sr = dnas.sort_values(by=['Sharpe'], ascending=False)
+        # print(top_sr[header].head(20))
+
+        return top_sr.head(max_dnas)
 
     # v TODO Move to utils
     def print_tops_formatted(self):
         print('\033[1m', end='')
         print(
-            Vars.refine_console_formatter.format(*Vars.refine_console_header1))
+            Vars.refine3_console_formatter.format(*Vars.refine3_console_header1))
         print(
-            Vars.refine_console_formatter.format(*Vars.refine_console_header2))
+            Vars.refine3_console_formatter.format(*Vars.refine3_console_header2))
         print('\033[0m', end='')
 
-        for r in self.sorted_results[0:25]:
+        for r in self.sorted_results[0:40]:
+            rdna = self.dnas.loc[self.dnas['dna'] == r['dna']]
+            # print(rdna)
+            r['_max_dd']       = rdna.iloc[0]['Max.DD']
+            r['_total_profit'] = rdna.iloc[0]['Total Net Profit']
+            r['_sharpe']       = rdna.iloc[0]['Sharpe']
             print(
-                Vars.refine_console_formatter.format(
+                Vars.refine3_console_formatter.format(
                     r['dna'],
-                    r['total_trades'],
-                    r['n_of_longs'],
-                    r['n_of_shorts'],
+                    # r['total_trades'],
+                    # r['n_of_longs'],
+                    # r['n_of_shorts'],
+                    r['_total_profit'],
+                    r['_max_dd'],
+                    r['_sharpe'],
                     r['total_profit'],
                     r['max_dd'],
                     r['annual_return'],

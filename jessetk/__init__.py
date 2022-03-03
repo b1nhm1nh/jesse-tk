@@ -1218,3 +1218,69 @@ def validateconfig():
 #     from jessetk.refine import refine
 #     r = refine(dna_file, start_date, finish_date, eliminate)
 #     r.run(dna_file, start_date, finish_date)
+
+
+@cli.command()
+@click.argument('dna_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.argument('inc_month', required=True, type=int)
+@click.argument('test_month', required=True, type=int)
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing dnas at every iteration.')
+@click.option(
+    '--dnas', default=160, show_default=True,
+    help='Number of max dnas to test.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+@click.option(
+    '--debug/--no-debug', default=False,
+    help='Displays detailed logs about the genetics algorithm. Use it if you are interested int he genetics algorithm.'
+)
+@click.option('--csv/--no-csv', default=False, help='Outputs a CSV file of all DNAs on completion.')
+@click.option('--json/--no-json', default=False, help='Outputs a JSON file of all DNAs on completion.')
+def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : int, test_month: int, cpu: int, dnas: int, eliminate:bool, debug: bool, csv: bool,
+             json: bool) -> None:
+    """
+    Walkforward in period. Enter in "dna_file" "YYYY-MM-DD" "YYYY-MM-DD" "3" "6"
+    """
+    import arrow
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.walk_forward import Refine
+
+
+    print (f" Walkforward period: {start_date.format('YYYY-MM-DD')} - {finish_date.format('YYYY-MM-DD')}")
+
+    a_start_date = arrow.get(start_date, 'YYYY-MM-DD')
+    a_finish_date = arrow.get(finish_date, 'YYYY-MM-DD')
+    i_start_date = a_start_date
+    i_finish_date = i_start_date.shift(months = test_month)
+    passno = 1
+    while  i_start_date <= a_finish_date:
+        if i_finish_date > a_finish_date:
+            i_finish_date = a_finish_date
+        print (f"Walk {i_start_date.format('YYYY-MM-DD')} - {i_finish_date.format('YYYY-MM-DD')} ")
+        r = Refine(dna_file, start_date, finish_date, dnas, eliminate, max_cpu, passno)
+        dna_file = r.run()
+
+        # calculate next period
+        i_start_date = i_start_date.shift(months = inc_month)
+        i_finish_date = i_start_date.shift(months = test_month)
+        passno += 1
