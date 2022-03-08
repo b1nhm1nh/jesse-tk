@@ -422,7 +422,9 @@ def get_metrics3(console_output) -> dict:
         
         if 'Sequential Hps' in line:
             metrics['seq_hps'] = split(line)
-            
+
+        if 'JSON Metrics' in line:
+            metrics['json_metrics'] = base64.b64decode(split(line)[1:-1])
     return metrics
 
 
@@ -514,3 +516,17 @@ def import_dnas3(filename, max_dnas = 1000):
 
     return top_sr.head(max_dnas)
 
+def make_route(filename: str, out_filename:str, exchange: str, symbol: str, timeframe: str, strategy: str):
+    # Read in the file
+    with open(filename, 'r') as file:
+        filedata = file.read()
+
+    # Replace the target string
+    filedata = filedata.replace('EXCHANGE',  exchange)
+    filedata = filedata.replace('SYMBOL',    symbol)
+    filedata = filedata.replace('TIMEFRAME', timeframe)
+    filedata = filedata.replace('STRATEGY',  strategy)
+
+        # Write the file out again
+    with open(out_filename, 'w') as file:
+        file.write(filedata)

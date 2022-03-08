@@ -1091,9 +1091,11 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
         hp_dict = json_lib.loads(hp.replace("'", '"').replace('%', '"'))
         hp_new = {p['name']: hp_dict[p['name']] for p in r.strategy.hyperparameters()}
 
-            # hp_new.update(hp)
-            # print('New hp:', hp_new)
-            # print(f'Json HP: {hp} -> {hp_new}')
+        # hp_new.update(hp)
+        # print('New hp:', hp_new)
+        # print("-----------------")
+        # print(f'Json HP: {hp} -> {hp_new}')
+        # quit()
 
     # <-------------------------------
 
@@ -1147,7 +1149,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
 
     # backtest_mode._initialized_strategies()
     backtest2r_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
-                      json=json, full_reports=full_reports) #, hyperparameters=hp_new)
+                      json=json, full_reports=full_reports, hyperparameters=hp_new)
 
     # Fix: Print out SeQ to console to help metrics module to grab it
     if seq != 'None':
