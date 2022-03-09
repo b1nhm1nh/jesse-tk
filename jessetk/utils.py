@@ -424,7 +424,7 @@ def get_metrics3(console_output) -> dict:
             metrics['seq_hps'] = split(line)
 
         if 'JSON Metrics' in line:
-            metrics['json_metrics'] = base64.b64decode(split(line)[1:-1])
+            metrics['json_metrics'] = line.split("|")[1]
     return metrics
 
 
