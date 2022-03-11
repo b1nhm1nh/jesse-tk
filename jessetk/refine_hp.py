@@ -94,7 +94,7 @@ class Refine:
                     # hp.append()
 
                     commands.append(
-                        f"jesse-tk backtest {self.start_date} {self.finish_date} --prefix={l_iters} --hp=\"{hp}\" ")
+                        f"jesse-tk backtest {self.start_date} {self.finish_date} --full-reports --prefix={l_iters} --hp=\"{hp}\" ")
                     index += 1
             # quit()
             processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
