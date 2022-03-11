@@ -131,7 +131,8 @@ class Refine:
                     f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
 
                 self.print_tops_formatted()
-
+        utils.create_csv_report(self.sorted_results,
+                                self.report_file_name, refine_file_header)
         # if self.eliminate:
         #     self.save_dnas(self.sorted_results, self.dna_py_file)
         # else:
