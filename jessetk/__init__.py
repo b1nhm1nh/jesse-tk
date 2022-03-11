@@ -1088,7 +1088,8 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
     # Convert and inject HP (Json) payload to route
     # and hp_new is None and r.dna is None and dna is None and seq is None:
     if hp != 'None' and hp_new is None:
-        hp_dict = json_lib.loads(hp.replace("'", '"').replace('%', '"'))
+        # print('HP:', hp)
+        hp_dict = json_lib.loads(hp.replace("'", '"').replace('%', '"').replace("True", 'true').replace("False", 'false'))
         hp_new = {p['name']: hp_dict[p['name']] for p in r.strategy.hyperparameters()}
 
         # hp_new.update(hp)
