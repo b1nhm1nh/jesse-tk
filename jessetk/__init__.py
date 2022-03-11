@@ -329,6 +329,35 @@ def refinels(long_dna_file:str, short_dna_file: str, start_date: str, finish_dat
     r = Refine(long_dna_file, short_dna_file, start_date, finish_date, dnas, eliminate, max_cpu)
     r.run()
 
+
+@cli.command()
+@click.argument('hp_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refine_hp(hp_file:str, start_date: str, finish_date: str, cpu: int) -> None:
+    """
+    backtest all candidate hp. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.refine_hp import Refine
+    r = Refine(hp_file, start_date, finish_date, max_cpu)
+    r.run()
 @cli.command()
 @click.argument('hp_file', required=True, type=str)
 @click.argument('start_date', required=True, type=str)
@@ -1011,8 +1040,12 @@ def testpairs(start_date: str, finish_date: str) -> None:
     '--hp', default='None', show_default=True, help='Hyperparameters payload as dict')
 @click.option(
     '--seq', default='None', show_default=True, help='Fixed width hyperparameters payload')
+@click.option(
+    '--prefix', default="", show_default=True,
+    help='Prefix file name')
+
 def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bool, fee: bool, chart: bool,
-             tradingview: bool, full_reports: bool, dna: str, hp: str, seq: str) -> None:
+             tradingview: bool, full_reports: bool, dna: str, hp: str, seq: str, prefix: str) -> None:
     """
     backtest mode. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
@@ -1150,7 +1183,7 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
 
     # backtest_mode._initialized_strategies()
     backtest2r_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
-                      json=json, full_reports=full_reports, hyperparameters=hp_new)
+                      json=json, full_reports=full_reports, hyperparameters=hp_new, prefix=prefix)
 
     # Fix: Print out SeQ to console to help metrics module to grab it
     if seq != 'None':

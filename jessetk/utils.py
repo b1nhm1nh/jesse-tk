@@ -423,6 +423,9 @@ def get_metrics3(console_output) -> dict:
         if 'Sequential Hps' in line:
             metrics['seq_hps'] = split(line)
 
+        if 'Report Prefix' in line:
+            metrics['dna'] = line.split("|")[1]
+
         if 'JSON Metrics' in line:
             metrics['json_metrics'] = line.split("|")[1]
     return metrics
