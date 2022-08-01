@@ -115,7 +115,7 @@ class Refine:
                 if metric not in results:
                     results.append(deepcopy(metric))
 
-                sorted_results_prelist = sorted(results, key=lambda x: float(x['sharpe']), reverse=True)
+                sorted_results_prelist = sorted(results, key=lambda x: 0 if x['sharpe'] is None else float(x['sharpe']), reverse=True)
 
                 self.sorted_results = []
 
