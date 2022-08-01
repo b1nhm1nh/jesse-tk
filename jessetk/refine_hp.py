@@ -112,7 +112,7 @@ class Refine:
                 # Map console output to a dict
                 metric = utils.get_metrics3(output.decode('utf-8'))
 
-                if metric not in results:
+                if metric['sharpe'] is not None and metric not in results:
                     results.append(deepcopy(metric))
 
                 sorted_results_prelist = sorted(results, key=lambda x: 0 if x['sharpe'] is None else float(x['sharpe']), reverse=True)
