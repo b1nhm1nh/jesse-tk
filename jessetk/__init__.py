@@ -1043,8 +1043,321 @@ def testpairs(start_date: str, finish_date: str) -> None:
 @click.option(
     '--prefix', default="", show_default=True,
     help='Prefix file name')
-
+@click.option(
+    '--dryrun/--no-dryrun', default=False, show_default=False,
+    help='Dry run')
+    
 def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bool, fee: bool, chart: bool,
+             tradingview: bool, full_reports: bool, dna: str, hp: str, seq: str, prefix: str, dryrun: bool) -> None:
+    """
+    backtest mode. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    from jesse.config import config
+    from jesse.routes import router
+    from jesse.modes import backtest_mode
+    validate_cwd()
+
+    config['app']['trading_mode'] = 'backtest'
+    # register_custom_exception_handler()
+    # debug flag
+    config['app']['debug_mode'] = debug
+    
+    # fee flag
+    if not fee:
+        for e in config['app']['trading_exchanges']:
+            config['env']['exchanges'][e]['fee'] = 0
+            get_exchange(e).fee = 0
+    # print(sys.argv)
+
+    # for r in router.routes:
+    #     hp_new = None
+
+    #     StrategyClass = jh.get_strategy_class(r.strategy_name)
+    #     r.strategy = StrategyClass()
+
+    #     r.strategy.name = r.strategy_name
+    #     r.strategy.exchange = r.exchange
+    #     r.strategy.symbol = r.symbol
+    #     r.strategy.timeframe = r.timeframe
+    hp_new = None
+    routes_dna = None
+    decoded_base32_dna = None
+
+    r = router.routes[0]
+    StrategyClass = jh.get_strategy_class(r.strategy_name)
+    r.strategy = StrategyClass()
+    r.strategy.name = r.strategy_name
+    r.strategy.exchange = r.exchange
+    r.strategy.symbol = r.symbol
+    r.strategy.timeframe = r.timeframe
+
+    # Convert and inject regular DNA string to route
+    if r.dna:  # and dna != 'None' and seq != 'None' and hp != 'None':
+        routes_dna = dna
+        hp_new = jh.dna_to_hp(r.strategy.hyperparameters(), r.dna)
+        print(f'DNA: {r.dna} -> HP: {hp_new}')
+
+    # Convert and inject base32 encoded DNA payload to route
+    # r.dna is None and seq is None and hp is None:
+    if dna != 'None' and hp_new is None:
+        decoded_base32_dna = utils.decode_base32(dna)
+        print('Decode base32', utils.decode_base32(dna))
+        hp_new = jh.dna_to_hp(r.strategy.hyperparameters(), decoded_base32_dna)
+        print(f'Base32 DNA: {dna} -> {hp_new}')
+
+    # Convert and inject SEQ encoded payload to route
+    # and hp_new is None and r.dna is None and dna is None and hp is None:
+    if seq != 'None' and hp_new is None:
+        seq_encoded = utils.decode_seq(seq)
+        hp_new = {
+            p['name']: int(val)
+            for p, val in zip(r.strategy.hyperparameters(), seq_encoded)
+        }
+
+
+        # hp_new.update(hp)
+        # print('New hp:', hp_new)
+        # r.strategy.hp = hp_new
+        print(f'SEQ: {seq} -> {hp_new}')
+
+    hp_dict = None
+    # Convert and inject HP (Json) payload to route
+    # and hp_new is None and r.dna is None and dna is None and seq is None:
+    if hp != 'None' and hp_new is None:
+        # print('HP:', hp)
+        hp_dict = json_lib.loads(hp.replace("'", '"').replace('%', '"').replace("True", 'true').replace("False", 'false'))
+        hp_new = {p['name']: hp_dict[p['name']] for p in r.strategy.hyperparameters()}
+
+        # hp_new.update(hp)
+        # print('New hp:', hp_new)
+        # print("-----------------")
+        # print(f'Json HP: {hp} -> {hp_new}')
+        # quit()
+
+    # <-------------------------------
+
+    router.routes[0].dna = decoded_base32_dna
+    print('Router:', router.routes[0])
+    # Inject Seq payload to route ->
+    # if seq != 'None':
+    #     print('Seq to decode:', seq)
+    #     seq_encoded = utils.decode_seq(seq)
+
+    #     for r in router.routes:
+    #         StrategyClass = jh.get_strategy_class(r.strategy_name)
+    #         r.strategy = StrategyClass()
+
+    #         hp_new = {}
+
+    #         for p, val in zip(r.strategy.hyperparameters(), seq_encoded):
+    #             # r.strategy.hyperparameters()[p] = hp[p]
+    #             # hp_new[p['name']] = hp[p]
+    #             # print(p['name'], p['default'])
+    #             hp_new[p['name']] = int(val)
+    #         # hp_new.update(hp)
+    #         # print('New hp:', hp_new)
+    #         # r.strategy.hp = hp_new
+    #         print('New hp:', hp_new)
+    #         # sleep(5)
+    # # <-------------------------------
+    # Inject payload HP to route
+    # refactor this shit
+    # for r in router.routes:
+    #     # print(r)
+    #     StrategyClass = jh.get_strategy_class(r.strategy_name)
+    #     r.strategy = StrategyClass()
+    #     if hp != 'None':
+    #         print('Payload: ', hp, 'type:', type(hp))
+
+    #         hp_dict = json_lib.loads(hp.replace("'", '"').replace('%', '"'))
+
+    #         print('Old hp:', r.strategy.hyperparameters())
+    #         hp_new = {}
+
+    #         for p in r.strategy.hyperparameters():
+    #             # r.strategy.hyperparameters()[p] = hp[p]
+    #             # hp_new[p['name']] = hp[p]
+    #             # print(p['name'], p['default'])
+    #             hp_new[p['name']] = hp_dict[p['name']]
+
+    #         # hp_new.update(hp)
+    #         # print('New hp:', hp_new)
+    #         r.strategy.hp = hp_new
+
+    # backtest_mode._initialized_strategies()
+    backtest2r_mode.run(start_date, finish_date, chart=chart, tradingview=tradingview, csv=csv,
+                      json=json, full_reports=full_reports, hyperparameters=hp_new, prefix=prefix, dry_run=dryrun)
+
+    # Fix: Print out SeQ to console to help metrics module to grab it
+    if seq != 'None':
+        print('Sequential Hps:    |', seq)
+
+    if hp != 'None':
+        print('Sequential Hps:    |', hp)
+
+    if decoded_base32_dna:
+        print('Dna String:        |', decoded_base32_dna)
+
+    if routes_dna:
+        print('Dna String:        |', routes_dna)
+    # try:    # Catch error when there's no trades.
+    #     data = report.portfolio_metrics()
+    #     print(data)
+    #     print('*' * 50)
+    #     print(type(data))
+    #     print(data[0])
+    # except:
+    #     print('No Trades, no metrics!')
+
+    db.close_connection()
+
+
+def print_initial_msg():
+    print(initial_test_message)
+
+
+def makedirs():
+    from jessetk.Vars import datadir
+
+    os.makedirs(f'./{datadir}', exist_ok=True)
+    os.makedirs(f'./{datadir}/results', exist_ok=True)
+    os.makedirs(f'./{datadir}/logs', exist_ok=True)
+    os.makedirs(f'./{datadir}/dnafiles', exist_ok=True)
+    os.makedirs(f'./{datadir}/pairfiles', exist_ok=True)
+
+
+def validateconfig():
+    pass
+    # if not (get_config('env.metrics.sharpe_ratio', False) and
+    #         get_config('env.metrics.calmar_ratio', False) and
+    #         get_config('env.metrics.winning_streak', False) and
+    #         get_config('env.metrics.losing_streak', False) and
+    #         get_config('env.metrics.largest_losing_trade', False) and
+    #         get_config('env.metrics.largest_winning_trade', False) and
+    #         get_config('env.metrics.total_winning_trades', False) and
+    #         get_config('env.metrics.total_losing_trades', False)):
+    #     print('Set optional metrics to True in config.py!')
+    #     exit()
+
+# @cli.command()
+# @click.argument('dna_file', required=True, type=str)
+# @click.argument('start_date', required=True, type=str)
+# @click.argument('finish_date', required=True, type=str)
+# @click.argument('eliminate', required=False, type=bool)
+# def refine(dna_file, start_date: str, finish_date: str, eliminate: bool) -> None:
+#     """
+#     backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+#     """
+#     os.chdir(os.getcwd())
+#     validate_cwd()
+#     validateconfig()
+#     makedirs()
+
+#     if not eliminate:
+#         eliminate = False
+
+#     from jessetk.refine import refine
+#     r = refine(dna_file, start_date, finish_date, eliminate)
+#     r.run(dna_file, start_date, finish_date)
+
+
+@cli.command()
+@click.argument('dna_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.argument('inc_month', required=True, type=int)
+@click.argument('test_month', required=True, type=int)
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing dnas at every iteration.')
+@click.option(
+    '--dnas', default=160, show_default=True,
+    help='Number of max dnas to test.')
+@click.option(
+    '--passno', default=1, show_default=True,
+    help='Start-up pass number.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+@click.option(
+    '--debug/--no-debug', default=False,
+    help='Displays detailed logs about the genetics algorithm. Use it if you are interested int he genetics algorithm.'
+)
+@click.option('--csv/--no-csv', default=False, help='Outputs a CSV file of all DNAs on completion.')
+@click.option('--json/--no-json', default=False, help='Outputs a JSON file of all DNAs on completion.')
+def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : int, test_month: int, cpu: int, dnas: int, passno: int, eliminate:bool, debug: bool, csv: bool,
+             json: bool) -> None:
+    """
+    Walkforward in period. Enter in "dna_file" "YYYY-MM-DD" "YYYY-MM-DD" "3" "6"
+    """
+    import arrow
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.walk_forward import Refine
+
+
+    print (f" Walkforward period: {start_date.format('YYYY-MM-DD')} - {finish_date.format('YYYY-MM-DD')}")
+
+    a_start_date = arrow.get(start_date, 'YYYY-MM-DD')
+    a_finish_date = arrow.get(finish_date, 'YYYY-MM-DD')
+    i_start_date = a_start_date
+    i_finish_date = i_start_date.shift(months = test_month)
+    # passno = 1
+    while  i_start_date <= a_finish_date:
+        if i_finish_date > a_finish_date:
+            i_finish_date = a_finish_date
+        print (f"Walk {i_start_date.format('YYYY-MM-DD')} - {i_finish_date.format('YYYY-MM-DD')} ")
+        r = Refine(dna_file, i_start_date.format('YYYY-MM-DD'), i_finish_date.format('YYYY-MM-DD'), dnas, eliminate, max_cpu, passno)
+        dna_file = r.run()
+
+        # calculate next period
+        i_start_date = i_start_date.shift(months = inc_month)
+        i_finish_date = i_start_date.shift(months = test_month)
+        passno += 1
+
+
+@cli.command()
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option('--debug/--no-debug', default=False,
+              help='Displays logging messages instead of the progressbar. Used for debugging your strategy.')
+@click.option('--csv/--no-csv', default=False,
+              help='Outputs a CSV file of all executed trades on completion.')
+@click.option('--json/--no-json', default=False,
+              help='Outputs a JSON file of all executed trades on completion.')
+@click.option('--fee/--no-fee', default=True,
+              help='You can use "--no-fee" as a quick way to set trading fee to zero.')
+@click.option('--chart/--no-chart', default=False,
+              help='Generates charts of daily portfolio balance and assets price change. Useful for a visual comparision of your portfolio against the market.')
+@click.option('--tradingview/--no-tradingview', default=False,
+              help="Generates an output that can be copy-and-pasted into tradingview.com's pine-editor too see the trades in their charts.")
+@click.option('--full-reports/--no-full-reports', default=False,
+              help="Generates QuantStats' HTML output with metrics reports like Sharpe ratio, Win rate, Volatility, etc., and batch plotting for visualizing performance, drawdowns, rolling statistics, monthly returns, etc.")
+@click.option(
+    '--dna', default='None', show_default=True, help='Base32 encoded dna string payload')
+@click.option(
+    '--hp', default='None', show_default=True, help='Hyperparameters payload as dict')
+@click.option(
+    '--seq', default='None', show_default=True, help='Fixed width hyperparameters payload')
+@click.option(
+    '--prefix', default="", show_default=True,
+    help='Prefix file name')
+
+def backtest_gui(start_date: str, finish_date: str, debug: bool, csv: bool, json: bool, fee: bool, chart: bool,
              tradingview: bool, full_reports: bool, dna: str, hp: str, seq: str, prefix: str) -> None:
     """
     backtest mode. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
@@ -1208,120 +1521,3 @@ def backtest(start_date: str, finish_date: str, debug: bool, csv: bool, json: bo
 
     db.close_connection()
 
-
-def print_initial_msg():
-    print(initial_test_message)
-
-
-def makedirs():
-    from jessetk.Vars import datadir
-
-    os.makedirs(f'./{datadir}', exist_ok=True)
-    os.makedirs(f'./{datadir}/results', exist_ok=True)
-    os.makedirs(f'./{datadir}/logs', exist_ok=True)
-    os.makedirs(f'./{datadir}/dnafiles', exist_ok=True)
-    os.makedirs(f'./{datadir}/pairfiles', exist_ok=True)
-
-
-def validateconfig():
-    pass
-    # if not (get_config('env.metrics.sharpe_ratio', False) and
-    #         get_config('env.metrics.calmar_ratio', False) and
-    #         get_config('env.metrics.winning_streak', False) and
-    #         get_config('env.metrics.losing_streak', False) and
-    #         get_config('env.metrics.largest_losing_trade', False) and
-    #         get_config('env.metrics.largest_winning_trade', False) and
-    #         get_config('env.metrics.total_winning_trades', False) and
-    #         get_config('env.metrics.total_losing_trades', False)):
-    #     print('Set optional metrics to True in config.py!')
-    #     exit()
-
-# @cli.command()
-# @click.argument('dna_file', required=True, type=str)
-# @click.argument('start_date', required=True, type=str)
-# @click.argument('finish_date', required=True, type=str)
-# @click.argument('eliminate', required=False, type=bool)
-# def refine(dna_file, start_date: str, finish_date: str, eliminate: bool) -> None:
-#     """
-#     backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
-#     """
-#     os.chdir(os.getcwd())
-#     validate_cwd()
-#     validateconfig()
-#     makedirs()
-
-#     if not eliminate:
-#         eliminate = False
-
-#     from jessetk.refine import refine
-#     r = refine(dna_file, start_date, finish_date, eliminate)
-#     r.run(dna_file, start_date, finish_date)
-
-
-@cli.command()
-@click.argument('dna_file', required=True, type=str)
-@click.argument('start_date', required=True, type=str)
-@click.argument('finish_date', required=True, type=str)
-@click.argument('inc_month', required=True, type=int)
-@click.argument('test_month', required=True, type=int)
-@click.option('--eliminate/--no-eliminate', default=False,
-              help='Remove worst performing dnas at every iteration.')
-@click.option(
-    '--dnas', default=160, show_default=True,
-    help='Number of max dnas to test.')
-@click.option(
-    '--passno', default=1, show_default=True,
-    help='Start-up pass number.')
-@click.option(
-    '--cpu', default=0, show_default=True,
-    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-@click.option(
-    '--debug/--no-debug', default=False,
-    help='Displays detailed logs about the genetics algorithm. Use it if you are interested int he genetics algorithm.'
-)
-@click.option('--csv/--no-csv', default=False, help='Outputs a CSV file of all DNAs on completion.')
-@click.option('--json/--no-json', default=False, help='Outputs a JSON file of all DNAs on completion.')
-def walkforward(dna_file: str, start_date: str, finish_date: str, inc_month : int, test_month: int, cpu: int, dnas: int, passno: int, eliminate:bool, debug: bool, csv: bool,
-             json: bool) -> None:
-    """
-    Walkforward in period. Enter in "dna_file" "YYYY-MM-DD" "YYYY-MM-DD" "3" "6"
-    """
-    import arrow
-    os.chdir(os.getcwd())
-    validate_cwd()
-    validateconfig()
-    makedirs()
-
-    if not eliminate:
-        eliminate = False
-
-    if cpu > cpu_count():
-        raise ValueError(
-            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
-    elif cpu == 0:
-        max_cpu = cpu_count()
-    else:
-        max_cpu = cpu
-    print('CPU:', max_cpu)
-
-    from jessetk.walk_forward import Refine
-
-
-    print (f" Walkforward period: {start_date.format('YYYY-MM-DD')} - {finish_date.format('YYYY-MM-DD')}")
-
-    a_start_date = arrow.get(start_date, 'YYYY-MM-DD')
-    a_finish_date = arrow.get(finish_date, 'YYYY-MM-DD')
-    i_start_date = a_start_date
-    i_finish_date = i_start_date.shift(months = test_month)
-    # passno = 1
-    while  i_start_date <= a_finish_date:
-        if i_finish_date > a_finish_date:
-            i_finish_date = a_finish_date
-        print (f"Walk {i_start_date.format('YYYY-MM-DD')} - {i_finish_date.format('YYYY-MM-DD')} ")
-        r = Refine(dna_file, i_start_date.format('YYYY-MM-DD'), i_finish_date.format('YYYY-MM-DD'), dnas, eliminate, max_cpu, passno)
-        dna_file = r.run()
-
-        # calculate next period
-        i_start_date = i_start_date.shift(months = inc_month)
-        i_finish_date = i_start_date.shift(months = test_month)
-        passno += 1
