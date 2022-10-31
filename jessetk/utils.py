@@ -519,6 +519,51 @@ def import_dnas3(filename, max_dnas = 1000):
 
     return top_sr.head(max_dnas)
 
+
+def import_hp_files(filename, max_dnas = 1000):
+    """
+    Import DNA from file
+    :param
+    """
+    hps = pd.read_csv(filename, sep="|", header=None)
+    print(len(hps))
+    hps.columns = ['hp']
+    print(hps.columns)    
+    hps.drop_duplicates(subset=['hp'], keep='first', inplace=True)    
+
+    print("----------------------------")
+    print(len(hps))
+    print(hps)
+
+    return hps
+    exit()
+    #replace header
+    columns = []
+    for str in dnas.columns:
+        str = str.replace(' Max.DD','Max.DD')        
+        str = str.replace(' Dna','dna')
+        str = str.replace(' Sharpe','Sharpe')
+        str = str.replace(' Total Net Profit','Total Net Profit')
+    #     str = str.replace('parameters','p')
+        columns.append(str)
+    dnas.columns = columns
+    #remove dupicate dnas
+    print(dnas.columns)
+    print(dnas.head(10))
+
+    dnas.drop_duplicates(subset=['dna'], keep='first', inplace=True)
+    #remove dnas with negative pnl total
+    dnas.drop(dnas[dnas['Total Net Profit'] < 0].index, inplace = True)
+    # dnas.drop(dnas[dnas['Max.DD'] < -25].index, inplace = True)
+
+    # top_ss2 = dnas.sort_values(by=['tt.smart_sortino','tn.smart_sortino'], ascending=False)
+    # print(top_ss2[header].head(20))
+    top_sr = dnas.sort_values(by=['Sharpe'], ascending=False)
+    # print(top_sr[header].head(20))
+
+    return top_sr.head(max_dnas)
+
+
 def make_route(filename: str, out_filename:str, exchange: str, symbol: str, timeframe: str, strategy: str):
     # Read in the file
     with open(filename, 'r') as file:

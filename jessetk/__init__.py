@@ -1521,3 +1521,42 @@ def backtest_gui(start_date: str, finish_date: str, debug: bool, csv: bool, json
 
     db.close_connection()
 
+
+@cli.command()
+@click.argument('long_hp_file', required=True, type=str)
+@click.argument('short_hp_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option(
+    '--hps', default=160, show_default=True,
+    help='The number of Max hp')
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing hps at every iteration.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refineoptunals(long_hp_file:str, short_hp_file: str, start_date: str, finish_date: str, hps: int, eliminate: bool, cpu: int) -> None:
+    """
+    backtest all candidate hps. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.refine_optuna_ls import Refine
+    r = Refine(long_hp_file, short_hp_file, start_date, finish_date, hps, eliminate, max_cpu)
+    r.run()
+
