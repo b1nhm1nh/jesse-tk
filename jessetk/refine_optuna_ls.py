@@ -17,7 +17,7 @@ import jessetk.utils
 from jessetk import utils, print_initial_msg, clear_console
 from jessetk.Vars import datadir
 from jessetk.Vars import refine_file_header
-
+import json
 
 class Refine:
     def __init__(self, long_dna_py_file, short_dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
@@ -68,7 +68,6 @@ class Refine:
         processes = []
         commands = []
         results = []
-        sorted_results = []
         iters_completed = 0
         self.l_hps = utils.import_hp_files(self.long_dna_py_file, self.max_hps)
         self.s_hps = utils.import_hp_files(self.short_dna_py_file, self.max_hps)
@@ -79,8 +78,10 @@ class Refine:
         self.n_of_hps = self.ln_of_hps * self.sn_of_hps
         index = 0  # TODO Reduce number of vars ...
         start = timer()
-        print(f"Size of dna: {len(self.l_hps)} {len(self.s_hps)}")
+        print(f"Size of hp: {len(self.l_hps)} {len(self.s_hps)}")
         self.dnas = []
+
+
         while l_iters > 0:
             l_iters -= 1
             s_iters = self.sn_of_hps
@@ -90,12 +91,11 @@ class Refine:
                 for _ in range(max_cpu):
                     if s_iters > 0:
                         s_iters -= 1
-                        dna = self.l_hps['dna'].values[l_iters] + self.s_hps['dna'].values[s_iters]
-                        self.dnas.append(dna)
-                        # print(f"Dna {dna}")
+                        hp = self.l_hps[l_iters][:-1] + ',' + self.s_hps[s_iters][ 1 - len(self.s_hps[s_iters]):]
+                        self.dnas.append(hp)
 
                         commands.append(
-                            f"jesse-tk backtest {self.start_date} {self.finish_date} --dna {utils.encode_base32(dna)}")
+                            f"jesse-tk backtest {self.start_date} {self.finish_date} --hp='{hp}'")
                         index += 1
 
                 processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
