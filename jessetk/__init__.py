@@ -1535,7 +1535,7 @@ def backtest_gui(start_date: str, finish_date: str, debug: bool, csv: bool, json
 @click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-def refineoptunals(long_hp_file:str, short_hp_file: str, start_date: str, finish_date: str, hps: int, eliminate: bool, cpu: int) -> None:
+def refine_optunals(long_hp_file:str, short_hp_file: str, start_date: str, finish_date: str, hps: int, eliminate: bool, cpu: int) -> None:
     """
     backtest all candidate hps. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
