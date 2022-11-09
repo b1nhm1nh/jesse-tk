@@ -43,9 +43,9 @@ class Refine:
         self.sorted_results = []
         self.results_without_dna = []
 
-        self.dnas_module = None
+        self.hps_module = None
         self.routes_template = None
-        self.dnas = None
+        self.hps = None
 
         self.n_of_dnas = None
 
@@ -60,6 +60,7 @@ class Refine:
         self.ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.filename = f'Refine_hp-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
 
+        self.hp_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.txt'
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
 
@@ -70,16 +71,16 @@ class Refine:
         results = []
         sorted_results = []
         iters_completed = 0
-        # self.dnas = self.import_hp()
-        self.dnas = utils.import_hp_files(self.hp_filename)
+        # self.hps = self.import_hp()
+        self.hps = utils.import_hp_files(self.hp_filename)
 
-        self.n_of_dnas = len(self.dnas)
-  
+        self.n_of_dnas = len(self.hps)
+        print(f"Save hp file: {len(self.hps)}")
+        self.save_hps_file()
+
         l_iters = self.n_of_dnas
-
         index = 0  # TODO Reduce number of vars ...
         start = timer()
-        print(f"Size of hp: {len(self.dnas)}")
 
         while l_iters > 0:
             commands = []
@@ -87,17 +88,13 @@ class Refine:
             for _ in range(max_cpu):
                 if l_iters > 0:
                     l_iters -= 1
-                    # print ( self.dnas[l_iters] )
-                    hp = json.loads(self.dnas[l_iters])
-                    hp['report_prefix'] = str(l_iters)
-                    # print (hp)
-
-                    # hp.append()
+                    hp = json.loads(self.hps[index])
+                    hp['report_prefix'] = str(index)
 
                     commands.append(
-                        f"jesse-tk backtest {self.start_date} {self.finish_date} --full-reports --prefix={l_iters} --hp=\"{hp}\" ")
+                        f"jesse-tk backtest {self.start_date} {self.finish_date} --full-reports --prefix={index} --hp=\"{hp}\" ")
                     index += 1
-            # quit()
+
             processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
             # wait for completion
             for p in processes:
@@ -196,11 +193,27 @@ class Refine:
         with open(dna_fn, 'w', encoding='utf-8') as f:
             self.write_dna_file(f, sorted_results)
 
+    def save_hps_file(self,):
+
+        jessetk.utils.remove_file(self.hp_file_name)
+
+        with open(self.hp_file_name, 'w', encoding='utf-8') as f:
+            i = 0
+            for hp in self.hps:
+                f.write(f"{i}\t{hp}\n")
+                i += 1
+        # f.flush()
+        f.close()
+        # f.flush()
+        # os.fsync(f.fileno())
+
+
+
     def write_dna_file(self, f, sorted_results):
         f.write('dnas = [\n')
 
         for srr in sorted_results:
-            for dnac in self.dnas:
+            for dnac in self.hps:
                 if srr['dna'] == dnac[0]:
                     f.write(str(dnac) + ',\n')
 
