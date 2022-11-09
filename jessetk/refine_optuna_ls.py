@@ -20,13 +20,13 @@ from jessetk.Vars import refine_file_header
 import json
 
 class Refine:
-    def __init__(self, long_dna_py_file, short_dna_py_file, start_date, finish_date, dnas, eliminate, cpu):
+    def __init__(self, long_hp_file, short_hp_file, start_date, finish_date, dnas, eliminate, cpu):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
 
-        self.long_dna_py_file = long_dna_py_file
-        self.short_dna_py_file = short_dna_py_file
+        self.long_hp_file = long_hp_file
+        self.short_hp_file = short_hp_file
         self.start_date = start_date
         self.finish_date = finish_date
         self.cpu = cpu
@@ -58,7 +58,7 @@ class Refine:
         self.removesimilardnas = False
 
         self.ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.filename = f'Refine_ls-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
+        self.filename = f'Refine_optuna_ls-{self.exchange}-{self.pair}-{self.timeframe}--{start_date}--{finish_date}'
 
         self.report_file_name = f'{self.jessetkdir}/results/{self.filename}--{self.ts}.csv'
         self.log_file_name = f'{self.jessetkdir}/logs/{self.filename}--{self.ts}.log'
@@ -69,8 +69,8 @@ class Refine:
         commands = []
         results = []
         iters_completed = 0
-        self.l_hps = utils.import_hp_files(self.long_dna_py_file, self.max_hps)
-        self.s_hps = utils.import_hp_files(self.short_dna_py_file, self.max_hps)
+        self.l_hps = utils.import_hp_files(self.long_hp_file, self.max_hps)
+        self.s_hps = utils.import_hp_files(self.short_hp_file, self.max_hps)
         self.ln_of_hps = len(self.l_hps)
         self.sn_of_hps = len(self.s_hps)
         l_iters = self.ln_of_hps
