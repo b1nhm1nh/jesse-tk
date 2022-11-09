@@ -70,7 +70,8 @@ class Refine:
         results = []
         sorted_results = []
         iters_completed = 0
-        self.dnas = self.import_hp()
+        # self.dnas = self.import_hp()
+        self.dnas = utils.import_hp_files(self.hp_filename)
 
         self.n_of_dnas = len(self.dnas)
   
