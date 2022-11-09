@@ -1560,3 +1560,27 @@ def refine_optunals(long_hp_file:str, short_hp_file: str, start_date: str, finis
     r = Refine(long_hp_file, short_hp_file, start_date, finish_date, hps, eliminate, max_cpu)
     r.run()
 
+@cli.command()
+@click.argument('long_hp_file', required=True, type=str)
+@click.argument('long_hp_file', required=True, type=str)
+@click.argument('exchange', required=True, type=str)
+@click.argument('symbol', required=True, type=str)
+@click.argument('timeframe', required=True, type=str)
+@click.argument('strategy', required=True, type=str)
+@click.option(
+    '--hps', default=160, show_default=True,
+    help='The number of Max hp')
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing hps at every iteration.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def make_route(template_file: str, exchange: str, symbol: str, timeframe: str, strategy: str) -> None:
+    """
+    backtest all candidate hps. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    from jessetk.utils import make_route as mr
+    
+    mr(template_file, "routes.py", exchange, symbol, timeframe, strategy)
+
+

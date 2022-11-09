@@ -78,7 +78,7 @@ class Refine:
 
         index = 0  # TODO Reduce number of vars ...
         start = timer()
-        print(f"Size of dna: {len(self.dnas)}")
+        print(f"Size of hp: {len(self.dnas)}")
 
         while l_iters > 0:
             commands = []
