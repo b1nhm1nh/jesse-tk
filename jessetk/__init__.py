@@ -334,34 +334,6 @@ def refinels(long_dna_file:str, short_dna_file: str, start_date: str, finish_dat
 @click.argument('hp_file', required=True, type=str)
 @click.argument('start_date', required=True, type=str)
 @click.argument('finish_date', required=True, type=str)
-@click.option(
-    '--cpu', default=0, show_default=True,
-    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-def refine_hp(hp_file:str, start_date: str, finish_date: str, cpu: int) -> None:
-    """
-    backtest all candidate hp. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
-    """
-    os.chdir(os.getcwd())
-    validate_cwd()
-    validateconfig()
-    makedirs()
-
-    if cpu > cpu_count():
-        raise ValueError(
-            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
-    elif cpu == 0:
-        max_cpu = cpu_count()
-    else:
-        max_cpu = cpu
-    print('CPU:', max_cpu)
-
-    from jessetk.refine_hp import Refine
-    r = Refine(hp_file, start_date, finish_date, max_cpu)
-    r.run()
-@cli.command()
-@click.argument('hp_file', required=True, type=str)
-@click.argument('start_date', required=True, type=str)
-@click.argument('finish_date', required=True, type=str)
 @click.option('--eliminate/--no-eliminate', default=False,
               help='Remove worst performing dnas at every iteration.')
 @click.option(
@@ -1535,7 +1507,7 @@ def backtest_gui(start_date: str, finish_date: str, debug: bool, csv: bool, json
 @click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-def refine_optunals(long_hp_file:str, short_hp_file: str, start_date: str, finish_date: str, hps: int, eliminate: bool, cpu: int) -> None:
+def refine_optuna_ls(long_hp_file:str, short_hp_file: str, start_date: str, finish_date: str, hps: int, eliminate: bool, cpu: int) -> None:
     """
     backtest all candidate hps. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
@@ -1575,4 +1547,75 @@ def make_route(template_file: str, exchange: str, symbol: str, timeframe: str, s
     
     mr(template_file, "routes.py", exchange, symbol, timeframe, strategy)
 
+# Not working
+@cli.command()
+@click.argument('dna_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.option(
+    '--dnas', default=160, show_default=True,
+    help='The number of Max DNA')
+@click.option('--eliminate/--no-eliminate', default=False,
+              help='Remove worst performing dnas at every iteration.')
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refine_hp_top(dna_file, start_date: str, finish_date: str, dnas: int, eliminate: bool, cpu: int) -> None:
+    """
+    backtest all candidate dnas. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if not eliminate:
+        eliminate = False
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.refine_top import Refine
+    r = Refine(dna_file, start_date, finish_date, dnas, eliminate, max_cpu)
+    r.run()
+
+#-----------------------------------------------------------------------------
+# Refine HP
+@cli.command()
+@click.argument('hp_file', required=True, type=str)
+@click.argument('start_date', required=True, type=str)
+@click.argument('finish_date', required=True, type=str)
+@click.argument('wf_steps', required=False, type=int)
+@click.argument('wf_inc_month', required=False, type=int)
+@click.argument('wf_test_month', required=False, type=int)
+@click.option(
+    '--cpu', default=0, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+def refine_hp(hp_file:str, start_date: str, finish_date: str, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu: int) -> None:
+    """
+    backtest all candidate hp. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
+    """
+    os.chdir(os.getcwd())
+    validate_cwd()
+    validateconfig()
+    makedirs()
+
+    if cpu > cpu_count():
+        raise ValueError(
+            f'Entered cpu cores number is more than available on this machine which is {cpu_count()}')
+    elif cpu == 0:
+        max_cpu = cpu_count()
+    else:
+        max_cpu = cpu
+    print('CPU:', max_cpu)
+
+    from jessetk.refine_hp import Refine
+    r = Refine(hp_file, start_date, finish_date, wf_steps, wf_inc_month, wf_test_month, max_cpu)
+    r.run()
 

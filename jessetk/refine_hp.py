@@ -18,9 +18,14 @@ from jessetk import utils, print_initial_msg, clear_console
 from jessetk.Vars import datadir
 from jessetk.Vars import refine_file_header
 import json
+import arrow
+#-----------------------------------------------
+#  Refine HP in a time range
+#  Additional 
+
 
 class Refine:
-    def __init__(self, hp_filename,  start_date, finish_date, cpu):
+    def __init__(self, hp_filename,  start_date, finish_date, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -29,8 +34,12 @@ class Refine:
 
         self.start_date = start_date
         self.finish_date = finish_date
-        self.cpu = cpu
 
+        self.wf_steps = wf_steps
+        self.wf_inc_month = wf_inc_month
+        self.wf_test_month = wf_test_month
+
+        self.cpu = cpu
 
         self.jessetkdir = datadir
         self.anchor = 'DNA!'
@@ -129,17 +138,74 @@ class Refine:
                     f'| {self.timeframe} | {self.start_date} -> {self.finish_date}')
 
                 self.print_tops_formatted()
+
+        if self.wf_steps > 0:
+            for r in sorted_results:
+                r.append({'sum_sharpe': r['sharpe']})
+            # Walkforward refine
+            for step in range(1, self.wf_steps):
+
+                a_start_date = arrow.get(self.finish_date, 'YYYY-MM-DD').shift(months=-self.wf_inc_month * step)
+                a_finish_date = a_start_date.shift(months=self.wf_test_month)
+
+                l_iters = self.n_of_dnas
+                index = 0  # TODO Reduce number of vars ...
+                start = timer()
+
+                while l_iters > 0:
+                    commands = []
+
+                    for _ in range(max_cpu):
+                        if l_iters > 0:
+                            l_iters -= 1
+                            hp = json.loads(self.hps[index])
+                            hp['report_prefix'] = str(index)
+
+                            commands.append(
+                                f"jesse-tk backtest {a_start_date.format('YYYY-MM-DD')} {a_finish_date.format('YYYY-MM-DD')} --full-reports --prefix={index} --hp=\"{hp}\" ")
+                            index += 1
+
+                    processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
+                    # wait for completion
+                    for p in processes:
+                        p.wait()
+
+                        # Get thread's console output
+                        (output, err) = p.communicate()
+                        # debug
+                        # print(output.decode('utf-8'))
+                        # exit()
+                        iters_completed += 1
+
+                        # Map console output to a dict
+                        metric = utils.get_metrics3(output.decode('utf-8'))
+
+                        if metric['sharpe'] is not None and metric not in results:
+                            results.append(deepcopy(metric))
+
+                        
+                        for r in self.sorted_results:
+                            if r['dna'] == metric['dna']:
+                                r['sum_sharpe'] += float(metric['sharpe'])
+                                break
+
+                        # sorted_results_prelist = sorted(results, key=lambda x: 0 if x['sum_sharpe'] is None else float(x['sum_sharpe']), reverse=True)
+                        # self.sorted_results = []
+
+                        self.sorted_results = sorted(self.sorted_results, key=lambda x: 0 if x['sum_sharpe'] is None else float(x['sum_sharpe']), reverse=True)
+
+
+                        clear_console()
+
+                        eta = ((timer() - start) / index) * (self.n_of_dnas - index)
+                        eta_formatted = strftime("%H:%M:%S", gmtime(eta))
+                        print(f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
+                            f'| {self.timeframe} | {a_start_date.format('YYYY-MM-DD')} -> {a_finish_date.format('YYYY-MM-DD')}')
+
+                        self.print_tops_formatted()            
+
         utils.create_csv_report(self.sorted_results,
                                 self.report_file_name, refine_file_header)
-        # if self.eliminate:
-        #     self.save_dnas(self.sorted_results, self.dna_py_file)
-        # else:
-        #     self.save_dnas(self.sorted_results)
-
-        # utils.create_csv_report(self.sorted_results,
-        #                         self.report_file_name, refine_file_header)
-
-
 
     def signal_handler(self, sig, frame):
         print('You pressed Ctrl+C!')
@@ -220,3 +286,22 @@ class Refine:
         f.write(']\n')
         f.flush()
         os.fsync(f.fileno())
+
+    def get_config(self, config_file):
+        import pathlib
+        import yaml
+
+        cfg_file = pathlib.Path(config_file)
+
+        # return loaded config
+        if len(self.config_data):
+            return self.config_data
+            
+        if not cfg_file.is_file():
+            print(f"{config_file} not found. Run create-config command.")
+            exit()
+        else:
+            with open(config_file, "r") as ymlfile:
+                cfg = yaml.load(ymlfile, yaml.SafeLoader)
+                self.config_data = cfg
+        return cfg
