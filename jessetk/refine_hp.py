@@ -202,7 +202,7 @@ class Refine:
                         print(f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
                             f'| {self.timeframe} | {a_start_date.format("YYYY-MM-DD")} -> {a_finish_date.format("YYYY-MM-DD")}')
 
-                        self.print_tops_formatted()            
+                        self.print_tops_formatted(step)            
 
         utils.create_csv_report(self.sorted_results,
                                 self.report_file_name, refine_file_header)
@@ -218,7 +218,7 @@ class Refine:
         return hp
  
     # v TODO Move to utils
-    def print_tops_formatted(self):
+    def print_tops_formatted(self, step: int = 1):
         print('\033[1m', end='')
         print(
             Vars.refine_console_formatter.format(*Vars.refine_console_header1))
@@ -238,7 +238,7 @@ class Refine:
                     r['annual_return'],
                     r['win_rate'],
                     r['serenity'],
-                    r['sum_sharpe'] if 'sum_sharpe' in r.keys() else r['sharpe'],
+                    round(r['sum_sharpe'] / step,2) if 'sum_sharpe' in r.keys() else r['sharpe'],
                     r['calmar'],
                     r['win_strk'],
                     r['lose_strk'],
