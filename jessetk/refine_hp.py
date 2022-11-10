@@ -78,7 +78,6 @@ class Refine:
         processes = []
         commands = []
         results = []
-        sorted_results = []
         iters_completed = 0
         # self.hps = self.import_hp()
         self.hps = utils.import_hp_files(self.hp_filename)
@@ -140,8 +139,8 @@ class Refine:
                 self.print_tops_formatted()
 
         if self.wf_steps > 0:
-            for r in sorted_results:
-                r.append({'sum_sharpe': r['sharpe']})
+            for r in self.sorted_results:
+                r['sum_sharpe'] = r['sharpe']
             # Walkforward refine
             for step in range(1, self.wf_steps):
 
@@ -238,7 +237,7 @@ class Refine:
                     r['annual_return'],
                     r['win_rate'],
                     r['serenity'],
-                    r['sharpe'],
+                    r['sum_sharpe'] if 'sum_sharpe' in r.keys() else r['sharpe'],
                     r['calmar'],
                     r['win_strk'],
                     r['lose_strk'],
