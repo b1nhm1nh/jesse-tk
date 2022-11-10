@@ -1591,9 +1591,9 @@ def refine_hp_top(dna_file, start_date: str, finish_date: str, dnas: int, elimin
 @click.argument('hp_file', required=True, type=str)
 @click.argument('start_date', required=True, type=str)
 @click.argument('finish_date', required=True, type=str)
-@click.argument('wf_steps', required=False, type=int)
-@click.argument('wf_inc_month', required=False, type=int)
-@click.argument('wf_test_month', required=False, type=int)
+@click.argument('wf_steps', default = 0, required=False, type=int)
+@click.argument('wf_inc_month', default = 0, required=False, type=int)
+@click.argument('wf_test_month', default = 0, required=False, type=int)
 @click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')

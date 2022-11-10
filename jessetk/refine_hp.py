@@ -187,6 +187,7 @@ class Refine:
                         for r in self.sorted_results:
                             if r['dna'] == metric['dna']:
                                 r['sum_sharpe'] += float(metric['sharpe'])
+                                r[f'sharpe_{step}'] = float(metric['sharpe'])
                                 break
 
                         # sorted_results_prelist = sorted(results, key=lambda x: 0 if x['sum_sharpe'] is None else float(x['sum_sharpe']), reverse=True)
