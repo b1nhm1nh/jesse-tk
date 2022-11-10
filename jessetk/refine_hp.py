@@ -200,7 +200,7 @@ class Refine:
                         eta = ((timer() - start) / index) * (self.n_of_dnas - index)
                         eta_formatted = strftime("%H:%M:%S", gmtime(eta))
                         print(f'{index}/{self.n_of_dnas}\teta: {eta_formatted} | {self.pair} '
-                            f'| {self.timeframe} | {a_start_date.format("YYYY-MM-DD")} -> {a_finish_date.format("YYYY-MM-DD")}')
+                            f'| {self.timeframe} | {a_start_date.format("YYYY-MM-DD")} -> {a_finish_date.format("YYYY-MM-DD")}  | WF step {step}/{self.wf_steps}')
 
                         self.print_tops_formatted(step)            
 
