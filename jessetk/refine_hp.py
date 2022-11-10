@@ -25,7 +25,7 @@ import arrow
 
 
 class Refine:
-    def __init__(self, hp_filename,  start_date, finish_date, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu):
+    def __init__(self, hp_filename,  start_date, finish_date, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu :int, full_reports: bool):
 
         import signal
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -38,6 +38,7 @@ class Refine:
         self.wf_steps = wf_steps
         self.wf_inc_month = wf_inc_month
         self.wf_test_month = wf_test_month
+        self.full_reports = full_reports
 
         self.cpu = cpu
 
@@ -100,7 +101,7 @@ class Refine:
                     hp['report_prefix'] = str(index)
 
                     commands.append(
-                        f"jesse-tk backtest {self.start_date} {self.finish_date} --full-reports --prefix={index} --hp=\"{hp}\" ")
+                        f"jesse-tk backtest {self.start_date} {self.finish_date} {'--full-reports' if self.full_reports else ''} --prefix={index} --hp=\"{hp}\" ")
                     index += 1
 
             processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]
@@ -161,7 +162,7 @@ class Refine:
                             hp['report_prefix'] = str(index)
 
                             commands.append(
-                                f"jesse-tk backtest {a_start_date.format('YYYY-MM-DD')} {a_finish_date.format('YYYY-MM-DD')} --full-reports --prefix={index} --hp=\"{hp}\" ")
+                                f"jesse-tk backtest {a_start_date.format('YYYY-MM-DD')} {a_finish_date.format('YYYY-MM-DD')} {'--full-reports' if self.full_reports else ''} --prefix={index} --hp=\"{hp}\" ")
                             index += 1
 
                     processes = [Popen(cmd, shell=True, stdout=PIPE) for cmd in commands]

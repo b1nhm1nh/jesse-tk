@@ -1597,7 +1597,11 @@ def refine_hp_top(dna_file, start_date: str, finish_date: str, dnas: int, elimin
 @click.option(
     '--cpu', default=0, show_default=True,
     help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
-def refine_hp(hp_file:str, start_date: str, finish_date: str, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu: int) -> None:
+@click.option(
+    '--full-reports', default=False, show_default=True,
+    help='The number of CPU cores that Jesse is allowed to use. If set to 0, it will use as many as is available on your machine.')
+
+def refine_hp(hp_file:str, start_date: str, finish_date: str, wf_steps: int, wf_inc_month: int, wf_test_month: int, cpu: int, full_reports: bool) -> None:
     """
     backtest all candidate hp. Enter in "YYYY-MM-DD" "YYYY-MM-DD"
     """
@@ -1616,6 +1620,6 @@ def refine_hp(hp_file:str, start_date: str, finish_date: str, wf_steps: int, wf_
     print('CPU:', max_cpu)
 
     from jessetk.refine_hp import Refine
-    r = Refine(hp_file, start_date, finish_date, wf_steps, wf_inc_month, wf_test_month, max_cpu)
+    r = Refine(hp_file, start_date, finish_date, wf_steps, wf_inc_month, wf_test_month, max_cpu, full_reports)
     r.run()
 
