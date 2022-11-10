@@ -143,9 +143,9 @@ class Refine:
             for r in self.sorted_results:
                 r['sum_sharpe'] = r['sharpe']
             # Walkforward refine
-            for step in range(1, self.wf_steps):
+            for step in range(1, self.wf_steps + 1):
 
-                a_start_date = arrow.get(self.finish_date, 'YYYY-MM-DD').shift(months=-self.wf_inc_month * step)
+                a_start_date = arrow.get(self.finish_date, 'YYYY-MM-DD').shift(months=self.wf_inc_month * step)
                 a_finish_date = a_start_date.shift(months=self.wf_test_month)
 
                 l_iters = self.n_of_dnas
