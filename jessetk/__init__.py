@@ -57,10 +57,7 @@ def inject_local_routes() -> None:
     router.set_routes(local_router.routes)
     router.set_extra_candles(local_router.extra_candles)
 
-# inject local files
-if is_jesse_project:
-    inject_local_config()
-    inject_local_routes()
+
 
 
 def validate_cwd() -> None:
@@ -76,7 +73,10 @@ def validate_cwd() -> None:
         )
         # os.exit(1)
         exit()
-
+    # inject local files
+    if is_jesse_project:
+        inject_local_config()
+        inject_local_routes()
 
 # create a Click group
 
@@ -1623,3 +1623,25 @@ def refine_hp(hp_file:str, start_date: str, finish_date: str, wf_steps: int, wf_
     r = Refine(hp_file, start_date, finish_date, wf_steps, wf_inc_month, wf_test_month, max_cpu, full_reports)
     r.run()
 
+@cli.command()
+@click.argument('template_file', required=True, type=str)
+@click.argument('new_strategy', required=True, type=str)
+@click.argument('version', required=True, type=str)
+@click.argument('description', required=True, type=str)
+
+def make_strategy(template_file: str, new_strategy: str, version: str, description: str) -> None:
+    """Make Long only/Short only/Both direction strategy from template file
+
+    Args:
+        template_file (str): _description_
+        new_strategy (str): _description_
+        version (str): _description_
+    """
+    
+    from jessetk.utils import make_strategy as ms
+    # new_strategy += f
+    
+    ms(template_file, new_strategy, 'long' , version, "L", description)
+    ms(template_file, new_strategy, 'short', version, "S", description)
+    ms(template_file, new_strategy, 'both' , version, "LIVE", description)
+    ms(template_file, new_strategy, 'both' , version, "HP", description)

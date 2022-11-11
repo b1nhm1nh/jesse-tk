@@ -539,6 +539,16 @@ def import_hp_files(filename, max_dnas = 1000):
 
 
 def make_route(filename: str, out_filename:str, exchange: str, symbol: str, timeframe: str, strategy: str):
+    """ Make route from template file
+
+    Args:
+        filename (str): _description_
+        out_filename (str): _description_
+        exchange (str): _description_
+        symbol (str): _description_
+        timeframe (str): _description_
+        strategy (str): _description_
+    """
     # Read in the file
     with open(filename, 'r') as file:
         filedata = file.read()
@@ -548,6 +558,43 @@ def make_route(filename: str, out_filename:str, exchange: str, symbol: str, time
     filedata = filedata.replace('SYMBOL',    symbol)
     filedata = filedata.replace('TIMEFRAME', timeframe)
     filedata = filedata.replace('STRATEGY',  strategy)
+
+        # Write the file out again
+    with open(out_filename, 'w') as file:
+        file.write(filedata)
+
+def make_strategy(template_strategy: str, new_strategy:str, direction : str, version: str, suffix: str, description: str):
+    """Make strategy file from template
+
+    Args:
+        template_strategy (str): Template file name
+        new_strategy (str): New strategy name
+        direction (str): 'long' 'short' 'both'
+        version (str): strategy version
+        suffix (str): suffix for L/S/LS/LIVE
+    """
+    # Read in the file
+    with open(f"./strategies/{template_strategy}/__init__.py", 'r') as file:
+        filedata = file.read()
+
+    long_condition  = 'True' if direction == 'long' or direction == 'both' else 'False'
+    short_condition = 'True' if direction == 'short' or direction == 'both' else 'False'
+
+    new_strategy += f'_{version}_{suffix}'
+
+    os.makedirs(f'./strategies/{new_strategy}/', exist_ok=True)
+
+    description = description.replace('\\r',f'\r')
+    description = description.replace('\\n',f'\n')
+    # Replace the target string
+    filedata = filedata.replace('__STRATEGY__',  new_strategy)
+    filedata = filedata.replace('__LONG_CONDITION__', long_condition)
+    filedata = filedata.replace('__SHORT_CONDITION__', short_condition)
+    filedata = filedata.replace('__VERSION__', version)
+    filedata = filedata.replace('__SUFFIX__', suffix)
+    filedata = filedata.replace('__DESCRIPTION__', description)
+
+    out_filename = f'./strategies/{new_strategy}/__init__.py'
 
         # Write the file out again
     with open(out_filename, 'w') as file:
